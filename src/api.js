@@ -20,7 +20,7 @@ async function getUtxoForAddress(address: string): Promise<Object> {
   );
   const r = await resp.json();
 
-  // Get all outputs whose `address` matches input address and `spentTransactionId` is `null.
+  // Get all outputs whose `address` matches input address and `spentTransactionId` is `null`.
   return r.items.map(({ outputs }) => (
     outputs.filter(output =>
       output.address === address && output.spentTransactionId === null
@@ -62,7 +62,7 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
   // ??? use BN ?
   const sum = (await Promise.all(
     input.addresses.map(getBalanceForAddress)
-  )).reduce((a, b) => a + b);
+  )).reduce(((a, b) => a + b), 0);
   const output: UtxoSumForAddressesOutput = { sum: String(sum) };
   return { status: 200, body: output };
 }
@@ -73,10 +73,13 @@ async function isUsed(address: string): Promise<{| used: boolean, address: strin
   );
   const r = await resp.json();
   // ???
-  return t.transactions && typeof r.transactions.totalReceived !== '0';
+  return {
+    used: r.transactions && r.transactions.totalReceived !== 0,
+    address,
+  };
 }
 
-const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
+const filterUsed: HandlerFunction = async function (req, _res) {
   const input: FilterUsedInput = req.body;
   
   const output: FilterUsedOutput = (await Promise.all(
