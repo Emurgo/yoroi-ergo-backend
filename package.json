@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "test",
+    "test": "jest",
     "dev": "nodemon --exec babel-node src/index.js | bunyan",
     "flow": "flow",
     "lint": "eslint src config",
