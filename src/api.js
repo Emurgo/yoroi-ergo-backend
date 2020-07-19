@@ -10,9 +10,11 @@ import type {
   UtxoSumForAddressesOutput,
   FilterUsedInput,
   FilterUsedOutput,
+  TxBodiesInput,
+  TxBodiesOutput,
+  HistoryInput,
+  HistoryOutput,
 } from './types';
-
-
 
 async function getUtxoForAddress(address: string): Promise<Object> {
   const resp = await fetch(
@@ -89,8 +91,34 @@ const filterUsed: HandlerFunction = async function (req, _res) {
   return { status: 200, body: output };
 }
 
+async function getTxBody(txHash: string): Promise<[string, string]> {
+  // TODO
+  const txBody = txHash;
+  return [ txHash, txBody ];
+}
+
+const txBodies: HandlerFunction = async function (req, _res) {
+  const input: TxBodiesInput = req.body;
+
+  const output: TxBodiesOutput = Object.fromEntries(await Promise.all(
+    input.txHashes.map(getTxBody)
+  ));
+
+  return { status: 200, body: output };
+}
+
+const history: HandlerFunction = async function (req, _res) {
+  const input: HistoryInput = req.body;
+  const output: HistoryOutput = {};
+
+  return { status: 200, body: output };
+}
+
 exports.handlers = [
   { method: 'post', url: '/api/txs/utxoForAddresses', handler: utxoForAddresses },
+  { method: 'post', url: '/api/txs/txBodies', handler: txBodies },
+
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
-  { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed},
+  { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
+  { method: 'post', url: '/api/v2/txs/history', handler: history },
 ];

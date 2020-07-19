@@ -55,7 +55,21 @@ const specs: Array<Spec> = [
       '2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU'
     ]
   },
-  
+
+  {
+    name: 'empty txBodies',
+    method: 'post',
+    endpoint: '/api/txs/txBodies',
+    input: { txHashes: [] },
+    output: {},
+  },
+  {
+    method: 'post',
+    endpoint: '/api/txs/txBodies',
+    input: { txHashes: ['xxx'] },
+    output: { xxx: 'xxx' },
+  },
+   
 ];
 
 const getUrl = endpoint => `http://localhost:3000${endpoint}`;

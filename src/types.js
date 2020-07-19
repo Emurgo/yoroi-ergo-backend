@@ -37,3 +37,45 @@ export type FilterUsedInput = {|
   addresses: Array<string>,
 |};
 export type FilterUsedOutput = Array<string>;
+
+export type TxBodiesInput = {|
+  txHashes: Array<string>
+|};
+export type TxBodiesOutput = {|
+  [key: string]: string
+|};
+
+export type HistoryInput = {|
+  addresses: Array<string>,
+  // omitting "after" means you query starting from the genesis block
+  after?: {
+    block: string, // block hash
+    tx: string, // tx hash
+  },
+  untilBlock: string, // block hash - inclusive
+|};
+export type HistoryOutput = Array<{|
+  // information that is only present if block is included in the blockchain
+  block_num: null | number,
+  block_hash: null | string,
+  tx_ordinal: null | number,
+  time: null | string, // timestamp with timezone
+  epoch: null | number,
+  slot: null | number,
+
+  // information that is always present
+  hash: string,
+  last_update: string, // timestamp with timezone
+  tx_state: 'Successful' | 'Failed' | 'Pending',
+  inputs: Array<{| // these will be ordered by the input transaction id asc
+    address: string,
+    amount: string,
+    id: string, // concatenation of txHash || index
+    index: number,
+    txHash: string,
+  |}>,
+  outputs: Array<{| //these will be ordered by transaction index asc.
+    address: string,
+    amount: string,
+  |}>,
+|}>;
