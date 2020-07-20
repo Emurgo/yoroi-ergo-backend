@@ -47,6 +47,7 @@ const askTransactionHistory = async (
     limit: number
     , addresses: string[]
     , afterNum: utils.UtilEither<number>
+    , afterTxHash: ?string
     , untilNum: utils.UtilEither<number>) : Promise<utils.UtilEither<TransactionFrag[]>> => {
 
   let output: any = [];
@@ -70,6 +71,15 @@ const askTransactionHistory = async (
     }
     output.push(response);
   }
+
+  if (afterTxHash != undefined) {
+    const index = output
+        .findIndex((tx) => (tx.id === afterTxHash))
+    if (index != undefined) {
+      output = output.slice(index + 1)
+    }
+  }
+
   return output;
 }
 
@@ -182,11 +192,11 @@ const txBodies: HandlerFunction = async function (req, _res) {
 
 const history: HandlerFunction = async function (req, _res) {
   const input: HistoryInput = req.body;
-  let output: HistoryOutput = {};
 
-  if(!req.body){
-    console.log("error, no body");
-    return;
+  if(!req.body) {
+    const errMsg = "error, no body";
+    console.log(errMsg);
+    return { status: 400, body: errMsg}
   }
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
 
@@ -199,9 +209,14 @@ const history: HandlerFunction = async function (req, _res) {
 
       const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
       const untilBlockNum = await askBlockNum(referenceBestBlock);
-      const unformatedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, untilBlockNum.value);
 
-      const txs = unformatedTxs.map((tx) => {
+      if (afterBlockNum.errMsg !== undefined || untilBlockNum.errMsg !== undefined) {
+        const errMsg = afterBlockNum.errMsg || untilBlockNum.errMsg;
+        return { status: 400, body: errMsg}
+      }
+
+      const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
+      const txs = unformattedTxs.map((tx) => {
         const iso8601date = new Date(tx.timestamp).toISOString()
         return {
           hash: tx.id,
@@ -217,39 +232,13 @@ const history: HandlerFunction = async function (req, _res) {
           outputs: tx.outputs
         }
       });
-      const refs = txs.filter( ({ is_reference }) => is_reference );
 
-      if(referenceTx !== undefined){
-        if(refs.length !== 1){
-          console.log(`
-                         api response with ${refs.length} rows for 
-                         refTx ${referenceTx} and refBestBlock ${referenceBestBlock}`);
-          return;
-        }
-
-        const { block_num: reference_block_height, hash, block_hash, tx_state } = refs[0];
-        if (!hash) {
-          console.log(`Reference transaction '${referenceTx}' is not found!`);
-          return;
-        }
-        if (block_hash !== referenceBlock) {
-          console.log(`
-                        Reference block '${referenceBlock}' for reference tx 
-                        '${referenceTx}' not match real block '${block_hash}' 
-                        (reference status is '${tx_state}')!`);
-          return;
-        }
-        if (!reference_block_height) {
-          console.log(`
-                        Reference bestblock '${referenceBestBlock}' does not 
-                        exist in the history!`);
-          return;
-        }
-      }
       return { status: 200, body: txs };
+
     case "error":
       console.log(verifiedBody.errMsg);
       return;
+
     default: return utils.assertNever(verifiedBody);
   }
 }
