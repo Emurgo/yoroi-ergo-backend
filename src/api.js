@@ -99,6 +99,25 @@ const bestBlock: HandlerFunction = async function (req, _res) {
   return { status: 200, body: output };
 };
 
+const signed: HandlerFunction = async function (req, _res) {
+  if (req.body && !req.body.signedTx) {
+    const errMsg = "Missing signedTx parameter";
+    console.log(errMsg);
+    return { status: 400, body: errMsg};
+  }
+
+  const signedTx = req.body.signedTx;
+  const resp = await fetch(
+      `${config.backend.explorer}/api/v0/transactions/send`,
+      {
+        method: 'post',
+        body: JSON.stringify(signedTx)
+      })
+
+  const r = await resp.json();
+  return { status: 200, body: r };
+};
+
 async function getUtxoForAddress(address: string): Promise<Object> {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/addresses/${address}/transactions`
@@ -246,6 +265,7 @@ const history: HandlerFunction = async function (req, _res) {
 exports.handlers = [
   { method: 'post', url: '/api/txs/utxoForAddresses', handler: utxoForAddresses },
   { method: 'post', url: '/api/txs/txBodies', handler: txBodies },
+  { method: 'post', url: '/api/txs/signed', handler: signed },
 
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
   { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
