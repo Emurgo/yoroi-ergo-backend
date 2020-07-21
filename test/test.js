@@ -22,16 +22,17 @@ const specs: Array<Spec> = [
   {
     method: 'post',
     endpoint: '/api/txs/utxoForAddresses',
-    input: { addresses: ['2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU'] },
-    output: [{
-      tx_hash: '0100ba9d4eae1b7aa79708d9ff592437ebe739a535bc818cdfb429431ea758b4',
-      tx_index: 0,
-      utxo_id: '0100ba9d4eae1b7aa79708d9ff592437ebe739a535bc818cdfb429431ea758b40',
-      receiver: '2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU',
-      amount: '74789527500000000'
-      }]
+    input: { addresses: ['9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk'] },
+    output: [
+      {
+        tx_hash: 'c7cfd2d8d27d52db60121b770e54e91596ce1c240f4e000dadaa8380c16afa13',
+        tx_index: 0,
+        utxo_id: 'c7cfd2d8d27d52db60121b770e54e91596ce1c240f4e000dadaa8380c16afa130',
+        receiver: '9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk',
+        amount: '100000000'
+      }
+    ],
   },
-
   {
     name: 'empty input for utxoSumForAddresses',
     method: 'post',
@@ -39,21 +40,28 @@ const specs: Array<Spec> = [
     input: { addresses: [] },
     output: { sum: '0' },
   },
-
+  {
+    name: 'zero utxoSumForAddresses',
+    method: 'post',
+    endpoint: '/api/txs/utxoSumForAddresses',
+    input: { addresses: ['9fzq1eba7sbiVYwtAV3GNufZEveKQsBPReX8Tmb9jtXjRJkttB7', '9ekxEAKApantTt1S6QTzAi9nypppCE2ovzT6ktVuCUvArdStYWC'] },
+    output: { sum: '0' },
+  },
   {
     method: 'post',
     endpoint: '/api/txs/utxoSumForAddresses',
-    input: { addresses: ['2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU'] },
-    output: { sum: '2221505730000000000' },
+    input: { addresses: ['9fzq1eba7sbiVYwtAV3GNufZEveKQsBPReX8Tmb9jtXjRJkttB7', '9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk'] },
+    output: { sum: '100000000' },
   },
 
   {
     method: 'post',
     endpoint: '/api/v2/addresses/filterUsed',
-    input: { addresses: ['2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU', '9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP'] },
+    input: { addresses: ['9fzq1eba7sbiVYwtAV3GNufZEveKQsBPReX8Tmb9jtXjRJkttB7', '9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk', '9ekxEAKApantTt1S6QTzAi9nypppCE2ovzT6ktVuCUvArdStYWC'] },
     output: [
-      '2Z4YBkDsDvQj8BX7xiySFewjitqp2ge9c99jfes2whbtKitZTxdBYqbrVZUvZvKv6aqn9by4kp3LE1c26LCyosFnVnm6b6U1JYvWpYmL2ZnixJbXLjWAWuBThV1D6dLpqZJYQHYDznJCk49g5TUiS4q8khpag2aNmHwREV7JSsypHdHLgJT7MGaw51aJfNubyzSKxZ4AJXFS27EfXwyCLzW1K6GVqwkJtCoPvrcLqmqwacAWJPkmh78nke9H4oT88XmSbRt2n9aWZjosiZCafZ4osUDxmZcc5QVEeTWn8drSraY3eFKe8Mu9MSCcVU'
-    ]
+      '9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk',
+      '9ekxEAKApantTt1S6QTzAi9nypppCE2ovzT6ktVuCUvArdStYWC'
+    ],
   },
 
   {
