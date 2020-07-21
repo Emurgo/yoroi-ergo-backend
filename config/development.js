@@ -5,6 +5,6 @@ module.exports = {
   },
   logLevel: 'debug',
   backend: {
-    explorer: 'https://new-explorer.ergoplatform.com',
+    explorer: 'https://api.ergoplatform.com',
   },
 };
