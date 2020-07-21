@@ -1,5 +1,6 @@
 // @flow
 const fetch = require('node-fetch');
+const config = require('../config/development');
 
 jest.setTimeout(30 * 1000);
 
@@ -80,7 +81,7 @@ const specs: Array<Spec> = [
    
 ];
 
-const getUrl = endpoint => `http://localhost:3000${endpoint}`;
+const getUrl = endpoint => `http://localhost:${config.server.port}${endpoint}`;
 
 for (const spec of specs) {
   const name = (spec.name ? `${spec.name}:` : '') + `${spec.method} ${spec.endpoint}`;
