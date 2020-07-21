@@ -15,6 +15,7 @@ import type {
   TxBodiesOutput,
   HistoryInput,
   HistoryOutput,
+  StatusOutput,
 } from './types';
 
 const addressesRequestLimit = 50;
@@ -194,9 +195,12 @@ const filterUsed: HandlerFunction = async function (req, _res) {
 }
 
 async function getTxBody(txHash: string): Promise<[string, string]> {
-  // TODO
-  const txBody = txHash;
-  return [ txHash, txBody ];
+  const resp = await fetch(
+    `${config.backend.explorer}/api/v0/transactions/${txHash}`
+  );
+
+  const txBody = await resp.json();
+  return [ txHash, JSON.stringify(txBody) ];
 }
 
 const txBodies: HandlerFunction = async function (req, _res) {
@@ -262,13 +266,23 @@ const history: HandlerFunction = async function (req, _res) {
   }
 }
 
+const status: HandlerFunction = async function (req, _res) {
+  const resp = await fetch(
+      `${config.backend.explorer}/api/v0/info`
+  );
+  const output: StatusOutput = {
+    isServerOk: resp.status === 200,
+  };
+  return { status: 200, body: output };
+}
+
 exports.handlers = [
   { method: 'post', url: '/api/txs/utxoForAddresses', handler: utxoForAddresses },
   { method: 'post', url: '/api/txs/txBodies', handler: txBodies },
-  { method: 'post', url: '/api/txs/signed', handler: signed },
-
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
   { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
-  { method: 'get', url: '/api/v2/bestBlock', handler: bestBlock },
   { method: 'post', url: '/api/v2/txs/history', handler: history },
+  { method: 'get', url: '/api/v2/bestBlock', handler: bestBlock },
+  { method: 'post', url: '/api/txs/signed', handler: signed },
+  { method: 'get', url: '/api/status', handler: status },
 ];

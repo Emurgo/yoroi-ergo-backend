@@ -79,3 +79,7 @@ export type HistoryOutput = Array<{|
     amount: string,
   |}>,
 |}>;
+
+export type StatusOutput = {|
+  isServerOk: boolean
+|}
