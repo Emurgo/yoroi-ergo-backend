@@ -35,7 +35,7 @@ server.listen(config.server.port, () => {
  
 function installHandlers(handlers: HandlerDefinitions) {
   for (const { method, url, handler } of handlers) {
-    server[method](url, async (req, res) => {
+    server[method](url, async (req, res, next) => {
       try {
         const { status, body } = await handler(req, res);
         // The handler indicates that it doesn't respond with a JSON object by
@@ -49,6 +49,7 @@ function installHandlers(handlers: HandlerDefinitions) {
         res.status(500);
         res.json({ error: error.message });
       }
+      next();
     });
   }
 }
