@@ -1,14 +1,6 @@
 // @flow
 
-export interface UtilOK<T> {
-    kind: "ok";
-    value: T;
-}
-export interface UtilErr {
-    kind: "error";
-    errMsg: string;
-}
-export type UtilEither<T> = UtilOK<T> | UtilErr;
+import type { UtilEither } from './types';
 
 /**
  * This method validates addresses request body

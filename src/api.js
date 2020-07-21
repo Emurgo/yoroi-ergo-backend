@@ -16,12 +16,13 @@ import type {
   HistoryInput,
   HistoryOutput,
   StatusOutput,
+  UtilEither,
 } from './types';
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
 
-const askBlockNum = async (blockHash: string, txHash: string): Promise<utils.UtilEither<number>> => {
+const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
 
   const resp = await fetch(
@@ -47,9 +48,9 @@ const askBlockNum = async (blockHash: string, txHash: string): Promise<utils.Uti
 const askTransactionHistory = async (
     limit: number
     , addresses: string[]
-    , afterNum: utils.UtilEither<number>
+    , afterNum: UtilEither<number>
     , afterTxHash: ?string
-    , untilNum: utils.UtilEither<number>) : Promise<utils.UtilEither<TransactionFrag[]>> => {
+    , untilNum: UtilEither<number>) : Promise<UtilEither<TransactionFrag[]>> => {
 
   let output: any = [];
 
@@ -260,7 +261,7 @@ const history: HandlerFunction = async function (req, _res) {
 
     case "error":
       console.log(verifiedBody.errMsg);
-      return;
+      return { status: 400, body: verifiedBody.errMsg };
 
     default: return utils.assertNever(verifiedBody);
   }

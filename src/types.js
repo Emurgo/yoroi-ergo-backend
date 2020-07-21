@@ -83,3 +83,13 @@ export type HistoryOutput = Array<{|
 export type StatusOutput = {|
   isServerOk: boolean
 |}
+
+export interface UtilOK<T> {
+    kind: "ok";
+    value: T;
+}
+export interface UtilErr {
+    kind: "error";
+    errMsg: string;
+}
+export type UtilEither<T> = UtilOK<T> | UtilErr;
