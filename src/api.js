@@ -126,9 +126,11 @@ async function getUtxoForAddress(address: string): Promise<Object> {
 
   // Get all outputs whose `address` matches input address and `spentTransactionId` is `null`.
   return r.items.map(({ outputs }) => (
-    outputs.filter(output =>
-      output.address === address && output.spentTransactionId === null
-    ).map((output, index) => ({ output, index }))
+    outputs
+      .map((output, index) => ({ output, index }))
+      .filter(({ output, index }) =>
+        output.address === address && output.spentTransactionId === null
+      )
   ))
   .flat()
   .map(({ output, index }) => ({
@@ -163,7 +165,6 @@ async function getBalanceForAddress(address: string): Promise<number> {
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
   const input: UtxoSumForAddressesInput = req.body;
-  // ??? use BN ?
   const sum = (await Promise.all(
     input.addresses.map(getBalanceForAddress)
   )).reduce(((a, b) => a + b), 0);
@@ -176,7 +177,6 @@ async function isUsed(address: string): Promise<{| used: boolean, address: strin
     `${config.backend.explorer}/api/v0/addresses/${address}`
   );
   const r = await resp.json();
-  // ???
   return {
     used: r.transactions && r.transactions.totalReceived !== 0,
     address,
