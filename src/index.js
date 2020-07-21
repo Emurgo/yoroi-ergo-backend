@@ -45,7 +45,7 @@ function installHandlers(handlers: HandlerDefinitions) {
           res.json(body);
         }
       } catch (error) {
-        res.log.error('handler error', error);
+        req.log.error('handler error', error);
         res.status(500);
         res.json({ error: error.message });
       }
