@@ -1,0 +1,40 @@
+{
+  "name": "yoroi-ergo-backend",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "dev": "nodemon --exec babel-node src/index.js | bunyan",
+    "flow": "flow",
+    "lint": "eslint src config",
+    "_flow-remove-types": "flow-remove-types ./src/ -d ./flow-removed/ --all --pretty",
+    "start": "npm run _flow-remove-types && node ./flow-removed/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Emurgo/yoroi-ergo-backend.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Emurgo/yoroi-ergo-backend/issues"
+  },
+  "homepage": "https://github.com/Emurgo/yoroi-ergo-backend#readme",
+  "dependencies": {
+    "@coinbarn/ergo-ts": "^0.3.0",
+    "bunyan": "^1.8.14",
+    "config": "^3.3.1",
+    "node-fetch": "^2.6.0",
+    "restify": "^8.5.1",
+    "restify-cors-middleware": "^1.1.1"
+  },
+  "devDependencies": {
+    "@babel/node": "^7.10.5",
+    "@babel/preset-flow": "^7.10.4",
+    "flow-bin": "^0.129.0",
+    "flow-remove-types": "^2.129.0",
+    "jest": "^26.1.0",
+    "nodemon": "^2.0.4"
+  }
+}
