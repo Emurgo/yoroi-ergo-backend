@@ -1,6 +1,6 @@
 // @flow
 
-import type { UtilEither } from './types';
+import type { UtilEither } from './types/utils';
 
 /**
  * This method validates addresses request body
@@ -16,11 +16,16 @@ const validateAddressesReq = (addressRequestLimit: number, addresses: string[]):
     return { kind: "ok", value: addresses };
 };
 
-interface HistoryRequest {
-    addresses: string[];
-    limit?: number;
-    after?: TxBlockData;
-    untilBlock: string;
+// type TxBlockData = {
+//     // TODO
+//     ...,
+// };
+type HistoryRequest = {
+    addresses: string[],
+    limit?: number,
+    after?: TxBlockData,
+    untilBlock: string,
+    ...,
 }
 
 const validateHistoryReq = (addressRequestLimit:number, apiResponseLimit:number, data: any): UtilEither<HistoryRequest> => {

@@ -4,7 +4,6 @@ const fetch = require('node-fetch');
 const utils = require('./utils');
 
 import type {
-  HandlerFunction,
   UtxoForAddressesInput,
   UtxoForAddressesOutput,
   UtxoSumForAddressesInput,
@@ -16,8 +15,12 @@ import type {
   HistoryInput,
   HistoryOutput,
   StatusOutput,
+} from './types/wrapperApi';
+import type {
+  HandlerFunction,
   UtilEither,
-} from './types';
+  UtilOK,
+} from './types/utils';
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
@@ -48,9 +51,10 @@ const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEith
 const askTransactionHistory = async (
     limit: number
     , addresses: string[]
-    , afterNum: UtilEither<number>
+    , afterNum: number
     , afterTxHash: ?string
-    , untilNum: UtilEither<number>) : Promise<UtilEither<TransactionFrag[]>> => {
+    , untilNum: number
+  ) : Promise<UtilEither<TransactionFrag[]>> => {
 
   let output: any = [];
 
@@ -59,7 +63,11 @@ const askTransactionHistory = async (
   ))
 
   const responses = await Promise.all(addressesPromises)
-  const responsesJson = await Promise.all(responses.map((resp) => (resp.json())))
+  const responsesJson = [];
+  for (const response of responses) {
+    if (response.status !== 200) return {kind:'error', errMsg: `error querying transactions for address`};
+    responsesJson.push(await response.json());
+  }
 
   if (responsesJson.length == 0) return output;
 
@@ -82,7 +90,10 @@ const askTransactionHistory = async (
     }
   }
 
-  return output;
+  return {
+    kind: 'ok',
+    value: output,
+  };
 }
 
 const bestBlock: HandlerFunction = async function (req, _res) {
@@ -234,13 +245,18 @@ const history: HandlerFunction = async function (req, _res) {
       const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
       const untilBlockNum = await askBlockNum(referenceBestBlock);
 
-      if (afterBlockNum.errMsg !== undefined || untilBlockNum.errMsg !== undefined) {
-        const errMsg = afterBlockNum.errMsg || untilBlockNum.errMsg;
-        return { status: 400, body: errMsg}
+      if (afterBlockNum.kind === 'error') {
+        return { status: 400, body: afterBlockNum.errMsg}
+      }
+      if (untilBlockNum.kind === 'error') {
+        return { status: 400, body: untilBlockNum.errMsg}
       }
 
       const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
-      const txs = unformattedTxs.map((tx) => {
+      if (unformattedTxs.kind === 'error') {
+        return { status: 400, body: unformattedTxs.errMsg}
+      }
+      const txs = unformattedTxs.value.map((tx) => {
         const iso8601date = new Date(tx.timestamp).toISOString()
         return {
           hash: tx.id,
