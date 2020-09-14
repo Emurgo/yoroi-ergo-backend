@@ -2,6 +2,7 @@
 const config = require('config');
 const fetch = require('node-fetch');
 const utils = require('./utils');
+const BigNumber = require('bignumber.js');
 
 import type {
   UtxoForAddressesInput,
@@ -21,6 +22,15 @@ import type {
   UtilEither,
   UtilOK,
 } from './types/utils';
+import type {
+  getApiV0BlocksP1SuccessResponse,
+  getApiV0AddressesP1TransactionsSuccessResponse,
+  getApiV0AddressesP1TransactionsItem,
+  getApiV0BlocksSuccessResponse,
+  postApiV0TransactionsSendSuccessResponse,
+  getApiV0TransactionsP1SuccessResponse,
+  getApiV0AddressesP1SuccessResponse,
+} from './types/explorer';
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
@@ -29,11 +39,11 @@ const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEith
   if (blockHash == undefined) return {kind:'ok', value: -1};
 
   const resp = await fetch(
-      `${config.backend.explorer}/api/v0/blocks/${blockHash}`
+    `${config.backend.explorer}/api/v0/blocks/${blockHash}`
   );
   if (resp.status !== 200) return {kind:'error', errMsg: 'after block not found.'};
 
-  const r = await resp.json();
+  const r: getApiV0BlocksP1SuccessResponse = await resp.json();
 
   if (txHash === "" || txHash == undefined) {
     return {kind:'ok', value: r.block.header.height};
@@ -48,35 +58,44 @@ const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEith
   return {kind:'error', errMsg: 'after tx not found.'};
 }
 
+const getCreationHeight: getApiV0AddressesP1TransactionsItem => number = (item) => {
+  // recall: Ergo requires at least one output per transaction
+  return item.outputs[0].creationHeight;
+}
+
 const askTransactionHistory = async (
     limit: number
     , addresses: string[]
     , afterNum: number
     , afterTxHash: ?string
     , untilNum: number
-  ) : Promise<UtilEither<TransactionFrag[]>> => {
+  ) : Promise<UtilEither<Array<getApiV0AddressesP1TransactionsItem>>> => {
 
-  let output: any = [];
+  let output: Array<getApiV0AddressesP1TransactionsItem> = [];
 
-  const addressesPromises = addresses.map((address) => (
+  const responses =  await Promise.all(addresses.map((address) => (
       fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
-  ))
+  )));
 
-  const responses = await Promise.all(addressesPromises)
-  const responsesJson = [];
+  const unfilteredResponses: Array<getApiV0AddressesP1TransactionsItem> = [];
   for (const response of responses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying transactions for address`};
-    responsesJson.push(await response.json());
+    const json: getApiV0AddressesP1TransactionsSuccessResponse = await response.json();
+    unfilteredResponses.push(...json.items);
   }
 
-  if (responsesJson.length == 0) return output;
+  if (unfilteredResponses.length == 0) return {
+    kind: 'ok',
+    value: [],
+  };
 
-  for(const response of responsesJson[0].items) {
+  for(const response of unfilteredResponses) {
     // filter by limit after and until
-    if (response.creationHeight <= afterNum) {
+    const creationHeight = getCreationHeight(response);
+    if (creationHeight <= afterNum) {
       continue;
     }
-    if (response.creationHeight > untilNum) {
+    if (creationHeight > untilNum) {
       continue;
     }
     output.push(response);
@@ -84,7 +103,7 @@ const askTransactionHistory = async (
 
   if (afterTxHash != undefined) {
     const index = output
-        .findIndex((tx) => (tx.id === afterTxHash))
+      .findIndex((tx) => (tx.id === afterTxHash))
     if (index != undefined) {
       output = output.slice(index + 1)
     }
@@ -98,10 +117,13 @@ const askTransactionHistory = async (
 
 const bestBlock: HandlerFunction = async function (req, _res) {
   const resp = await fetch(
-      `${config.backend.explorer}/api/v0/blocks`
+    `${config.backend.explorer}/api/v0/blocks`
   );
 
-  const r = await resp.json();
+  if (resp.status !== 200) {
+    return {status: 400, body: `error getting bestBlock`};
+  }
+  const r: getApiV0BlocksSuccessResponse = await resp.json();
   const output = {
     epoch: 0,
     slot: r.items[0].height,
@@ -127,18 +149,22 @@ const signed: HandlerFunction = async function (req, _res) {
         body: JSON.stringify(signedTx)
       })
 
-  const r = await resp.json();
+  if (resp.status !== 200) {
+    return { status: 400, body: `error sending transaction`};
+  }
+  const r: postApiV0TransactionsSendSuccessResponse = await resp.json();
   return { status: 200, body: r };
 };
 
-async function getUtxoForAddress(address: string): Promise<Object> {
+async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAddressesOutput>> {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/addresses/${address}/transactions`
   );
-  const r = await resp.json();
+  if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
+  const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
 
   // Get all outputs whose `address` matches input address and `spentTransactionId` is `null`.
-  return r.items.map(({ outputs }) => (
+  const result = r.items.map(({ outputs }) => (
     outputs
       .map((output, index) => ({ output, index }))
       .filter(({ output, index }) =>
@@ -153,76 +179,130 @@ async function getUtxoForAddress(address: string): Promise<Object> {
      receiver: address,
      amount: String(output.value)
   }));
+
+  return {
+    kind: 'ok',
+    value: result,
+  };
 }
 
 
 const utxoForAddresses: HandlerFunction = async function (req, _res) {
   const input: UtxoForAddressesInput = req.body;
   
-  const output: UtxoForAddressesOutput = (await Promise.all(
+  const outputsForAddresses: Array<UtilEither<UtxoForAddressesOutput>> = (await Promise.all(
     input.addresses.map(getUtxoForAddress)
-  )).flat();
-  return { status: 200, body: output };
+  ));
+
+  const result: UtxoForAddressesOutput = [];
+  for (const outputsForAddress of outputsForAddresses) {
+    if (outputsForAddress.kind === 'error') {
+      return { status: 400, body: outputsForAddress.errMsg}
+    }
+    result.push(...outputsForAddress.value);
+  }
+  return { status: 200, body: result };
 }
 
-async function getBalanceForAddress(address: string): Promise<number> {
+async function getBalanceForAddress(address: string): Promise<UtilEither<number>> {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/addresses/${address}`
   );
-  const r = await resp.json();
+  if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
+  const r: getApiV0AddressesP1SuccessResponse = await resp.json();
   if (r.transactions && typeof r.transactions.confirmedBalance === 'number') {
-    return r.transactions.confirmedBalance;
+    return {
+      kind: 'ok',
+      value: r.transactions.confirmedBalance,
+    };
   }
-  return 0;
+  return {
+    kind: 'ok',
+    value: 0,
+  };
 }
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
   const input: UtxoSumForAddressesInput = req.body;
-  const sum = (await Promise.all(
+  const balances = await Promise.all(
     input.addresses.map(getBalanceForAddress)
-  )).reduce(((a, b) => a + b), 0);
-  const output: UtxoSumForAddressesOutput = { sum: String(sum) };
+  );
+
+  let sum = new BigNumber(0);
+  for (const balance of balances) {
+    if (balance.kind === 'error') {
+      return {status: 400, body: balance.errMsg};
+    }
+    sum = sum.plus(balance.value);
+  }
+  const output: UtxoSumForAddressesOutput = { sum: sum.toString() };
   return { status: 200, body: output };
 }
 
-async function isUsed(address: string): Promise<{| used: boolean, address: string |}> {
+async function isUsed(address: string): Promise<UtilEither<{| used: boolean, address: string |}>> {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/addresses/${address}`
   );
-  const r = await resp.json();
+  if (resp.status !== 200) return {kind:'error', errMsg: `error querying address information`};
+
+  const r: getApiV0AddressesP1SuccessResponse = await resp.json();
   return {
-    used: r.transactions && r.transactions.totalReceived !== 0,
-    address,
+    kind: 'ok',
+    value: {
+      used: r.transactions && r.transactions.totalReceived !== 0,
+      address,
+    },
   };
 }
 
 const filterUsed: HandlerFunction = async function (req, _res) {
   const input: FilterUsedInput = req.body;
   
-  const output: FilterUsedOutput = (await Promise.all(
+  const usedStatuses = await Promise.all(
     input.addresses.map(isUsed)
-  )).filter(({ used }) => used).map(({ address }) => address);
-
-  return { status: 200, body: output };
+  );
+  const result: FilterUsedOutput = [];
+  for (const status of usedStatuses) {
+    if (status.kind === 'error') {
+      return {status: 400, body: status.errMsg};
+    }
+    if (status.value.used) {
+      result.push(status.value.address);
+    }
+  }
+  return { status: 200, body: result };
 }
 
-async function getTxBody(txHash: string): Promise<[string, string]> {
+async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0TransactionsP1SuccessResponse]>> {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/transactions/${txHash}`
   );
+  if (resp.status !== 200) {
+    return { kind: 'error', errMsg: `error sending transaction`};
+  }
 
-  const txBody = await resp.json();
-  return [ txHash, JSON.stringify(txBody) ];
+  const txBody: getApiV0TransactionsP1SuccessResponse = await resp.json();
+  return {
+    kind: 'ok',
+    value: [ txHash, txBody ],
+  };
 }
 
 const txBodies: HandlerFunction = async function (req, _res) {
   const input: TxBodiesInput = req.body;
 
-  const output: TxBodiesOutput = Object.fromEntries(await Promise.all(
+  const txBodyEntries = await Promise.all(
     input.txHashes.map(getTxBody)
-  ));
+  );
+  const result: {| [key: string]: getApiV0TransactionsP1SuccessResponse |} = {};
+  for (const entry of txBodyEntries) {
+    if (entry.kind === 'error') {
+      return {status: 400, body: entry.errMsg};
+    }
+    result[entry.value[0]] = entry.value[1];
+  }
 
-  return { status: 200, body: output };
+  return { status: 200, body: result };
 }
 
 const history: HandlerFunction = async function (req, _res) {
@@ -238,7 +318,7 @@ const history: HandlerFunction = async function (req, _res) {
   switch (verifiedBody.kind) {
     case "ok":
       const body = verifiedBody.value;
-      const limit = body.limit || apiResponseLimit;
+      const limit = apiResponseLimit;
       const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [];
       const referenceBestBlock = body.untilBlock;
 
@@ -257,17 +337,18 @@ const history: HandlerFunction = async function (req, _res) {
         return { status: 400, body: unformattedTxs.errMsg}
       }
       const txs = unformattedTxs.value.map((tx) => {
+        const creationHeight = getCreationHeight(tx);
         const iso8601date = new Date(tx.timestamp).toISOString()
         return {
           hash: tx.id,
           is_reference: tx.id === referenceTx,
-          tx_state: 'Successful', // graphql doesn't handle pending/failed txs
+          tx_state: 'Successful', // explorer doesn't handle pending transactions
           last_update: iso8601date,
-          block_num: tx.creationHeight,
+          block_num: creationHeight,
           block_hash: tx.headerId, // don't have it
           time: iso8601date,
-          epoch: 0,
-          slot: tx.creationHeight,
+          epoch: 0, // TODO
+          slot: 0, // TODO
           inputs: tx.inputs,
           outputs: tx.outputs
         }
