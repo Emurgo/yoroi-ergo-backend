@@ -25,7 +25,7 @@
     "@coinbarn/ergo-ts": "^0.3.0",
     "bunyan": "^1.8.14",
     "config": "^3.3.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "restify": "^8.5.1",
     "restify-cors-middleware": "^1.1.1"
   },
