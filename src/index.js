@@ -4,7 +4,7 @@ const config = require('config');
 const bunyan = require('bunyan');
 const corsMiddleware = require('restify-cors-middleware');
 const api = require('./api');
-import type { HandlerDefinitions } from './types';
+import type { HandlerDefinitions } from './types/utils';
 
 const logger = bunyan.createLogger({
   name: 'yoroi-ergo-backend',
