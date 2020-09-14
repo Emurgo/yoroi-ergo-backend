@@ -1,6 +1,11 @@
 // @flow
 
 import type { UtilEither } from './types/utils';
+import type { HistoryInput } from './types/wrapperApi';
+
+function assertNever(x: any): any {
+  throw new Error ("this should never happen" + x);
+}
 
 /**
  * This method validates addresses request body
@@ -16,31 +21,15 @@ const validateAddressesReq = (addressRequestLimit: number, addresses: string[]):
     return { kind: "ok", value: addresses };
 };
 
-// type TxBlockData = {
-//     // TODO
-//     ...,
-// };
-type HistoryRequest = {
-    addresses: string[],
-    limit?: number,
-    after?: TxBlockData,
-    untilBlock: string,
-    ...,
-}
-
-const validateHistoryReq = (addressRequestLimit:number, apiResponseLimit:number, data: any): UtilEither<HistoryRequest> => {
+const validateHistoryReq = (addressRequestLimit:number, apiResponseLimit:number, data: HistoryInput): UtilEither<HistoryInput> => {
     if(!('addresses' in data))
         return {kind:"error", errMsg: "body.addresses does not exist."};
     if(!('untilBlock' in data))
         return {kind:"error", errMsg: "body.untilBlock does not exist."};
-    if(('after' in data) && !('tx' in data.after))
+    if((data.after != null) && !('tx' in data.after))
         return {kind:"error", errMsg: "body.after exists but body.after.tx does not"};
-    if(('after' in data) && !('block' in data.after))
+    if((data.after != null) && !('block' in data.after))
         return {kind:"error", errMsg: "body.after exists but body.after.block does not"};
-    if(('limit' in data) && typeof data.limit !== "number")
-        return {kind:"error", errMsg: " body.limit must be a number"};
-    if(('limit' in data) && data.limit > apiResponseLimit)
-        return {kind:"error", errMsg: `body.limit parameter exceeds api limit: ${apiResponseLimit}`};
 
     const validatedAddresses = validateAddressesReq(addressRequestLimit, data.addresses);
     switch(validatedAddresses.kind){
@@ -53,6 +42,7 @@ const validateHistoryReq = (addressRequestLimit:number, apiResponseLimit:number,
 };
 
 module.exports = {
+    assertNever,
     validateHistoryReq,
     validateAddressesReq
 }

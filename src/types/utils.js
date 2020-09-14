@@ -6,6 +6,7 @@ export type HandlerReturn = {|
   body: Object,
 |};
 
+/** All functions exposed through an endpoint must be of type HandlerFunction */
 export type HandlerFunction =
   (request: Request, response: Response) => Promise<HandlerReturn>;
 
