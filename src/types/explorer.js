@@ -62,6 +62,8 @@ export type getApiV0BlocksP1SuccessResponse = {
       }>,
       "outputs": Array<{
         "id": string,
+        "txId": string,
+        "index": number,
         "value": number,
         "creationHeight": number,
         "ergoTree": string,
@@ -121,6 +123,8 @@ export type getApiV0AddressesP1TransactionsItem = {
   }>,
   "outputs": Array<{
     "id": string,
+    "txId": string,
+    "index": number,
     "value": number,
     "creationHeight": number,
     "ergoTree": string,
@@ -229,6 +233,8 @@ export type getApiV0TransactionsP1SuccessResponse = {
   }>,
   "outputs": Array<{
     "id": string,
+    "txId": string,
+    "index": number,
     "value": number,
     "creationHeight": number,
     "ergoTree": string,
@@ -255,6 +261,7 @@ export type getApiV0TransactionsP1SuccessResponse = {
 };
 export type getApiV0TransactionsP1Response = getApiV0TransactionsP1SuccessResponse | FailResponse;
 
+// api/v0/info
 export type getApiV0InfoSuccessResponse = {
   "version": string,
   "supply": number,
