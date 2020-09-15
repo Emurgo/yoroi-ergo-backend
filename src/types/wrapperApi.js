@@ -17,7 +17,7 @@ export type UtxoSumForAddressesInput = {|
   addresses: Array<string>,
 |};
 export type UtxoSumForAddressesOutput = {|
-  sum: ?string,
+  sum: string,
 |};
 
 export type FilterUsedInput = {|
@@ -28,17 +28,14 @@ export type FilterUsedOutput = Array<string>;
 export type TxBodiesInput = {|
   txHashes: Array<string>
 |};
-export type TxBodiesOutput = {|
-  [key: string]: string
-|};
 
 export type HistoryInput = {|
   addresses: Array<string>,
   // omitting "after" means you query starting from the genesis block
-  after?: {
+  after?: {|
     block: string, // block hash
     tx: string, // tx hash
-  },
+  |},
   untilBlock: string, // block hash - inclusive
 |};
 export type HistoryOutput = Array<{|

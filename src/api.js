@@ -12,7 +12,6 @@ import type {
   FilterUsedInput,
   FilterUsedOutput,
   TxBodiesInput,
-  TxBodiesOutput,
   HistoryInput,
   HistoryOutput,
   StatusOutput,
@@ -28,6 +27,7 @@ import type {
   getApiV0AddressesP1TransactionsItem,
   getApiV0BlocksSuccessResponse,
   postApiV0TransactionsSendSuccessResponse,
+  postApiV0TransactionsSendRequest,
   getApiV0TransactionsP1SuccessResponse,
   getApiV0AddressesP1SuccessResponse,
 } from './types/explorer';
@@ -125,8 +125,8 @@ const bestBlock: HandlerFunction = async function (req, _res) {
   }
   const r: getApiV0BlocksSuccessResponse = await resp.json();
   const output = {
-    epoch: 0,
-    slot: r.items[0].height,
+    epoch: 0, // TODO
+    slot: 0, // TODO
     hash: r.items[0].id,
     height: r.items[0].height,
   };
@@ -135,18 +135,13 @@ const bestBlock: HandlerFunction = async function (req, _res) {
 };
 
 const signed: HandlerFunction = async function (req, _res) {
-  if (req.body && !req.body.signedTx) {
-    const errMsg = "Missing signedTx parameter";
-    console.log(errMsg);
-    return { status: 400, body: errMsg};
-  }
+  const body: postApiV0TransactionsSendRequest = req.body;
 
-  const signedTx = req.body.signedTx;
   const resp = await fetch(
       `${config.backend.explorer}/api/v0/transactions/send`,
       {
         method: 'post',
-        body: JSON.stringify(signedTx)
+        body,
       })
 
   if (resp.status !== 200) {
@@ -341,11 +336,9 @@ const history: HandlerFunction = async function (req, _res) {
         const iso8601date = new Date(tx.timestamp).toISOString()
         return {
           hash: tx.id,
-          is_reference: tx.id === referenceTx,
           tx_state: 'Successful', // explorer doesn't handle pending transactions
-          last_update: iso8601date,
           block_num: creationHeight,
-          block_hash: tx.headerId, // don't have it
+          block_hash: tx.headerId,
           time: iso8601date,
           epoch: 0, // TODO
           slot: 0, // TODO

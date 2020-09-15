@@ -250,6 +250,7 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "feePerByte": number,
     ...,
   },
+  "summary": any, // this one isn't in the Ergo docs, but shows up in practice
   ...,
 };
 export type getApiV0TransactionsP1Response = getApiV0TransactionsP1SuccessResponse | FailResponse;
@@ -262,3 +263,34 @@ export type getApiV0InfoSuccessResponse = {
   ...,
 };
 export type getApiV0InfoResponse = getApiV0InfoSuccessResponse | FailResponse;
+
+// taken from the node API's swagger definition
+export type postApiV0TransactionsSendRequest = {|
+  id?: string, // hex
+  inputs: Array<{|
+    boxId: string, // hex
+    spendingProof: {|
+      proofBytes: string, // hex
+      extension: {| [key: string]: string /* hex */ |},
+    |}, 
+    extension?: {| [key: string]: string /* hex */ |},
+  |}>,
+  dataInputs: Array<{|
+    boxId: string, // hex
+    extension?: {| [key: string]: string /* hex */ |},
+  |}>,
+  outputs: Array<{|
+    boxId?: string, // hex
+    value: number,
+    ergoTree: string, // hex
+    creationHeight: number,
+    assets?: Array<{|
+      tokenId: string, // hex
+      amount: number,
+    |}>,
+    additionalRegisters: {| [key: string]: string /* hex */ |},
+    transactionId?: string, // hex
+    index?: number,
+  |}>,
+  size?: number,
+|};
