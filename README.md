@@ -115,6 +115,8 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       creationHeight: number,
       ergoTree: string,
       id: string,
+      txId: string,
+      index: number,
       mainChain: boolean,
       spentTransactionId: string,
       value: number,
