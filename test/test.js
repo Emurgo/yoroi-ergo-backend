@@ -105,6 +105,21 @@ const specs: Array<Spec> = [
   },
 
   {
+    name: 'history',
+    method: 'post',
+    endpoint: '/api/v2/txs/history',
+    input: {
+      addresses: ['9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP'],
+      after: {
+        block: 'ac4740b30371f48703f69b280ce74823539c4f7d4bc9d9368194912d12dcb287',
+        tx: '3cb50adbf9ece09b900c63d12bf7edf39acf3df992b1139d2fa0ad02d4dfe20b',
+      },
+      untilBlock: 'a4e7c126bb3f26384efff11157b24fc09020f56bc782ad5b821097eeb6165dc1',
+    },
+    output: [{}], // TODO
+  },
+
+  {
     method: 'get',
     endpoint: '/api/status',
     output: { isServerOk: true },

@@ -35,13 +35,13 @@ import type {
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
 
-const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEither<number>> => {
+const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
 
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/blocks/${blockHash}`
   );
-  if (resp.status !== 200) return {kind:'error', errMsg: 'after block not found.'};
+  if (resp.status !== 200) return {kind:'error', errMsg: 'block not found.'};
 
   const r: getApiV0BlocksP1SuccessResponse = await resp.json();
 
@@ -55,12 +55,7 @@ const askBlockNum = async (blockHash: string, txHash?: string): Promise<UtilEith
       }
   }
 
-  return {kind:'error', errMsg: 'after tx not found.'};
-}
-
-const getCreationHeight: getApiV0AddressesP1TransactionsItem => number = (item) => {
-  // recall: Ergo requires at least one output per transaction
-  return item.outputs[0].creationHeight;
+  return {kind:'error', errMsg: 'tx not found.'};
 }
 
 const askTransactionHistory = async (
@@ -90,8 +85,9 @@ const askTransactionHistory = async (
   };
 
   for(const response of unfilteredResponses) {
+    console.log(response);
     // filter by limit after and until
-    const creationHeight = getCreationHeight(response);
+    const creationHeight = response.miniBlockInfo.height;
     if (creationHeight <= afterNum) {
       continue;
     }
@@ -302,6 +298,7 @@ const txBodies: HandlerFunction = async function (req, _res) {
 
 const history: HandlerFunction = async function (req, _res) {
   const input: HistoryInput = req.body;
+  console.log(input);
 
   if(!req.body) {
     const errMsg = "error, no body";
@@ -314,17 +311,23 @@ const history: HandlerFunction = async function (req, _res) {
     case "ok":
       const body = verifiedBody.value;
       const limit = apiResponseLimit;
-      const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [];
+      const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
       const referenceBestBlock = body.untilBlock;
 
       const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
       const untilBlockNum = await askBlockNum(referenceBestBlock);
 
       if (afterBlockNum.kind === 'error') {
+        if (afterBlockNum.errMsg.includes('tx')) {
+          throw new Error("REFERENCE_TX_NOT_FOUND");
+        }
+        if (afterBlockNum.errMsg.includes('block')) {
+          throw new Error("REFERENCE_BLOCK_MISMATCH");
+        }
         return { status: 400, body: afterBlockNum.errMsg}
       }
       if (untilBlockNum.kind === 'error') {
-        return { status: 400, body: untilBlockNum.errMsg}
+        throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
       }
 
       const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
@@ -332,12 +335,11 @@ const history: HandlerFunction = async function (req, _res) {
         return { status: 400, body: unformattedTxs.errMsg}
       }
       const txs = unformattedTxs.value.map((tx) => {
-        const creationHeight = getCreationHeight(tx);
         const iso8601date = new Date(tx.timestamp).toISOString()
         return {
           hash: tx.id,
           tx_state: 'Successful', // explorer doesn't handle pending transactions
-          block_num: creationHeight,
+          block_num: tx.miniBlockInfo.height,
           block_hash: tx.headerId,
           time: iso8601date,
           epoch: 0, // TODO
