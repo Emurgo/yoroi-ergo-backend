@@ -12,7 +12,6 @@ import type {
   FilterUsedInput,
   FilterUsedOutput,
   TxBodiesInput,
-  TxBodiesOutput,
   HistoryInput,
   HistoryOutput,
   StatusOutput,

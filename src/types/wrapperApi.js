@@ -28,9 +28,6 @@ export type FilterUsedOutput = Array<string>;
 export type TxBodiesInput = {|
   txHashes: Array<string>
 |};
-export type TxBodiesOutput = {|
-  [key: string]: string
-|};
 
 export type HistoryInput = {|
   addresses: Array<string>,

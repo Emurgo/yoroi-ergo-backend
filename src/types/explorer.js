@@ -250,6 +250,7 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "feePerByte": number,
     ...,
   },
+  "summary": any, // this one isn't in the Ergo docs, but shows up in practice
   ...,
 };
 export type getApiV0TransactionsP1Response = getApiV0TransactionsP1SuccessResponse | FailResponse;
@@ -263,6 +264,7 @@ export type getApiV0InfoSuccessResponse = {
 };
 export type getApiV0InfoResponse = getApiV0InfoSuccessResponse | FailResponse;
 
+// taken from the node API's swagger definition
 export type postApiV0TransactionsSendRequest = {|
   id?: string, // hex
   inputs: Array<{|
