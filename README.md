@@ -77,6 +77,19 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
 <details>
   <summary>api/v2/txs/history</summary>
 
+  A pagination mechanism is provided to handled rollbacks.
+
+  To handle pagination, we use an `after` and `untilBlock` field that refers to positions inside the chain. Usually, pagination works as follows:
+  1) Query the `bestblock` endpoint to get the current tip of the chain (and call this `untilBlock`)
+  2) Look up the last transaction your application has saved locally (and call this `after`)
+  3) Query everything between `untilBlock` and `after`. If `untilBlock` no long exists, requery. If `after` no long exists, mark the transaction as failed and re-query with an earlier transaction
+  4) If more results were returned than the maximum responses you can receive for one query, find the most recent transction included in the response and set this as the new `after` and then query again (with the same value for `untilBlock`)
+
+  **Note**: this endpoint will throw an error if either the `untilBlock` or `after` fields no longer exist inside the blockchain (allowing your app to handle rollbacks). Notably, the error codes are
+  - 'REFERENCE_BLOCK_MISMATCH'
+  - 'REFERENCE_TX_NOT_FOUND'
+  - 'REFERENCE_BEST_BLOCK_MISMATCH'
+
   Input:
   ```
   {
@@ -91,7 +104,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
   ```
   Output:
   ```
-  {
+  Array<{
     block_hash: string,
     block_num: number,
     hash: string,
@@ -99,10 +112,19 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       address: string,
       id: string,
       outputTransactionId: string,
+      outputIndex: number, // index in tx that created the output we're consuming
       spendingProof: string,
       transactionId: string,
       value: number,
       ...
+    }>,
+    dataInputs: Array<{
+      id: string,
+      value: number,
+      transactionId: string,
+      outputIndex: number,
+      outputTransactionId: string,
+      address: string,
     }>,
     outputs: Array<{
       additionalRegisters: { ... },
@@ -126,7 +148,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
     slot: 0, // TODO
     time: string, // ISO string
     tx_state: 'Successful', // explorer doesn't handle pending transactions
-  }
+  }>
   ```
 </details>
 
@@ -160,7 +182,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       spendingProof: {|
         proofBytes: string, // hex
         extension: {| [key: string]: string /* hex */ |},
-      |}, 
+      |},
       extension?: {| [key: string]: string /* hex */ |},
     |}>,
     dataInputs: Array<{|
