@@ -87,7 +87,7 @@ const askTransactionHistory = async (
   for(const response of unfilteredResponses) {
     console.log(response);
     // filter by limit after and until
-    const creationHeight = response.miniBlockInfo.height;
+    const creationHeight = response.inclusionHeight;
     if (creationHeight <= afterNum) {
       continue;
     }
@@ -339,12 +339,13 @@ const history: HandlerFunction = async function (req, _res) {
         return {
           hash: tx.id,
           tx_state: 'Successful', // explorer doesn't handle pending transactions
-          block_num: tx.miniBlockInfo.height,
+          block_num: tx.inclusionHeight,
           block_hash: tx.headerId,
           time: iso8601date,
           epoch: 0, // TODO
           slot: 0, // TODO
           inputs: tx.inputs,
+          dataInputs: tx.dataInputs,
           outputs: tx.outputs
         }
       });

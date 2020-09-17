@@ -102,12 +102,14 @@ export type getApiV0BlocksP1Response = getApiV0BlocksP1SuccessResponse | FailRes
 export type getApiV0AddressesP1TransactionsItem = {
   "id": string,
   "headerId": string,
+  "inclusionHeight": number,
   "timestamp": number,
   "confirmationsCount": number,
   "inputs": Array<{
     "id": string,
     "spendingProof": string,
     "value": number,
+    "outputIndex": number,
     "transactionId": string,
     "outputTransactionId": string,
     "address": string,
@@ -117,6 +119,7 @@ export type getApiV0AddressesP1TransactionsItem = {
     "id": string,
     "value": number,
     "transactionId": string,
+    "outputIndex": number,
     "outputTransactionId": string,
     "address": string,
     ...,

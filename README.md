@@ -104,7 +104,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
   ```
   Output:
   ```
-  {
+  Array<{
     block_hash: string,
     block_num: number,
     hash: string,
@@ -112,10 +112,19 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       address: string,
       id: string,
       outputTransactionId: string,
+      outputIndex: number, // index in tx that created the output we're consuming
       spendingProof: string,
       transactionId: string,
       value: number,
       ...
+    }>,
+    dataInputs: Array<{
+      id: string,
+      value: number,
+      transactionId: string,
+      outputIndex: number,
+      outputTransactionId: string,
+      address: string,
     }>,
     outputs: Array<{
       additionalRegisters: { ... },
@@ -139,7 +148,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
     slot: 0, // TODO
     time: string, // ISO string
     tx_state: 'Successful', // explorer doesn't handle pending transactions
-  }
+  }>
   ```
 </details>
 
@@ -173,7 +182,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       spendingProof: {|
         proofBytes: string, // hex
         extension: {| [key: string]: string /* hex */ |},
-      |}, 
+      |},
       extension?: {| [key: string]: string /* hex */ |},
     |}>,
     dataInputs: Array<{|
