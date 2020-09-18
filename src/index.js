@@ -15,6 +15,8 @@ const server = restify.createServer({ log: logger });
 
 const cors = corsMiddleware({
   origins: config.server.corsOrigins,
+  allowHeaders: config.server.corsAllowHeaders,
+  exposeHeaders: config.server.corsExposeHeaders,
 });
 server.pre(cors.preflight);
 server.use(cors.actual);
@@ -39,7 +41,7 @@ function installHandlers(handlers: HandlerDefinitions) {
       try {
         const { status, body } = await handler(req, res);
         // The handler indicates that it doesn't respond with a JSON object by
-        // returnint status === 0.
+        // return int status === 0.
         if (status !== 0) {
           res.status(status);
           res.json(body);
