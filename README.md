@@ -140,7 +140,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       txId: string,
       index: number,
       mainChain: boolean,
-      spentTransactionId: string,
+      spentTransactionId: null | string,
       value: number,
       ...
     }>,
@@ -153,7 +153,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
 </details>
 
 <details>
-  <summary>api/v2/bestBlock</summary>
+  <summary>api/v2/bestblock</summary>
 
   Input:
   ```

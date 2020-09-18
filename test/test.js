@@ -95,7 +95,7 @@ const specs: Array<Spec> = [
 
   {
     method: 'get',
-    endpoint: '/api/v2/bestBlock',
+    endpoint: '/api/v2/bestblock',
     output: (output) => {
       expect(typeof output.epoch).toBe('number');
       expect(typeof output.height).toBe('number');

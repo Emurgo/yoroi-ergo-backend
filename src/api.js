@@ -376,7 +376,7 @@ exports.handlers = [
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
   { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
   { method: 'post', url: '/api/v2/txs/history', handler: history },
-  { method: 'get', url: '/api/v2/bestBlock', handler: bestBlock },
+  { method: 'get', url: '/api/v2/bestblock', handler: bestBlock },
   { method: 'post', url: '/api/txs/signed', handler: signed },
   { method: 'get', url: '/api/status', handler: status },
 ];
