@@ -13,13 +13,11 @@ import type {
   FilterUsedOutput,
   TxBodiesInput,
   HistoryInput,
-  HistoryOutput,
   StatusOutput,
 } from './types/wrapperApi';
 import type {
   HandlerFunction,
   UtilEither,
-  UtilOK,
 } from './types/utils';
 import type {
   getApiV0BlocksP1SuccessResponse,
@@ -110,7 +108,7 @@ const askTransactionHistory = async (
   };
 }
 
-const bestBlock: HandlerFunction = async function (req, _res) {
+const bestBlock: HandlerFunction = async function (_req, _res) {
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/blocks`
   );
@@ -157,7 +155,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
   const result = r.items.map(({ outputs }) => (
     outputs
       .map((output, index) => ({ output, index }))
-      .filter(({ output, index }) =>
+      .filter(({ output, }) =>
         output.address === address && output.spentTransactionId === null
       )
   ))
@@ -307,7 +305,7 @@ const history: HandlerFunction = async function (req, _res) {
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
 
   switch (verifiedBody.kind) {
-    case "ok":
+    case "ok": {
       const body = verifiedBody.value;
       const limit = apiResponseLimit;
       const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
@@ -350,16 +348,16 @@ const history: HandlerFunction = async function (req, _res) {
       });
 
       return { status: 200, body: txs };
-
-    case "error":
+    }
+    case "error": {
       console.log(verifiedBody.errMsg);
       return { status: 400, body: verifiedBody.errMsg };
-
+    }
     default: return utils.assertNever(verifiedBody);
   }
 }
 
-const status: HandlerFunction = async function (req, _res) {
+const status: HandlerFunction = async function (_req, _res) {
   const resp = await fetch(
       `${config.backend.explorer}/api/v0/info`
   );
