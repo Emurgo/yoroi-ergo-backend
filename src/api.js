@@ -85,7 +85,6 @@ const askTransactionHistory = async (
   };
 
   for(const response of unfilteredResponses) {
-    console.log(response);
     // filter by limit after and until
     const creationHeight = response.inclusionHeight;
     if (creationHeight <= afterNum) {
