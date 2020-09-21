@@ -120,6 +120,7 @@ const specs: Array<Spec> = [
     output: [{
       "block_hash": "a4e7c126bb3f26384efff11157b24fc09020f56bc782ad5b821097eeb6165dc1",
       "block_num": 277204,
+      "tx_ordinal": 1,
       "epoch": 0,
       "hash": "c8df2f2d0dca51ab9a375ad9c77322cc11ebd7f3ba088168797e06371a573818",
       "inputs": [{

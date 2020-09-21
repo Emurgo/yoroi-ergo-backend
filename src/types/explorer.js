@@ -107,6 +107,7 @@ export type getApiV0AddressesP1TransactionsItem = {
   "id": string,
   "headerId": string,
   "inclusionHeight": number,
+  "index": number,
   "timestamp": number,
   "confirmationsCount": number,
   "inputs": Array<{

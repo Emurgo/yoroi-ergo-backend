@@ -295,11 +295,9 @@ const txBodies: HandlerFunction = async function (req, _res) {
 
 const history: HandlerFunction = async function (req, _res) {
   const input: HistoryInput = req.body;
-  console.log(input);
 
   if(!req.body) {
     const errMsg = "error, no body";
-    console.log(errMsg);
     return { status: 400, body: errMsg}
   }
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
@@ -337,6 +335,7 @@ const history: HandlerFunction = async function (req, _res) {
           hash: tx.id,
           tx_state: 'Successful', // explorer doesn't handle pending transactions
           block_num: tx.inclusionHeight,
+          tx_ordinal: tx.index,
           block_hash: tx.headerId,
           time: iso8601date,
           epoch: 0, // TODO
@@ -350,7 +349,6 @@ const history: HandlerFunction = async function (req, _res) {
       return { status: 200, body: txs };
     }
     case "error": {
-      console.log(verifiedBody.errMsg);
       return { status: 400, body: verifiedBody.errMsg };
     }
     default: return utils.assertNever(verifiedBody);
