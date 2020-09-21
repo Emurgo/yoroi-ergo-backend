@@ -112,6 +112,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       address: string,
       id: string,
       outputTransactionId: string,
+      index: number,
       outputIndex: number, // index in tx that created the output we're consuming
       spendingProof: string,
       transactionId: string,

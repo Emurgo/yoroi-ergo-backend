@@ -48,6 +48,8 @@ export type getApiV0BlocksP1SuccessResponse = {
         "spendingProof": string,
         "value": number,
         "transactionId": string,
+        "index": number,
+        "outputIndex": number,
         "outputTransactionId": string,
         "address": string,
         ...,
@@ -55,6 +57,8 @@ export type getApiV0BlocksP1SuccessResponse = {
       "dataInputs": Array<{
         "id": string,
         "value": number,
+        "index": number,
+        "outputIndex": number,
         "transactionId": string,
         "outputTransactionId": string,
         "address": string,
@@ -109,6 +113,7 @@ export type getApiV0AddressesP1TransactionsItem = {
     "id": string,
     "spendingProof": string,
     "value": number,
+    "index": number,
     "outputIndex": number,
     "transactionId": string,
     "outputTransactionId": string,
@@ -119,6 +124,7 @@ export type getApiV0AddressesP1TransactionsItem = {
     "id": string,
     "value": number,
     "transactionId": string,
+    "index": number,
     "outputIndex": number,
     "outputTransactionId": string,
     "address": string,
@@ -222,6 +228,8 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "spendingProof": string,
     "value": number,
     "transactionId": string,
+    "index": number,
+    "outputIndex": number,
     "outputTransactionId": string,
     "address": string,
     ...,
@@ -230,6 +238,8 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "id": string,
     "value": number,
     "transactionId": string,
+    "index": number,
+    "outputIndex": number,
     "outputTransactionId": string,
     "address": string,
     ...,
@@ -259,7 +269,18 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "feePerByte": number,
     ...,
   },
-  "summary": any, // this one isn't in the Ergo docs, but shows up in practice
+  "summary": {
+    id: string,
+    timestamp: number,
+    size: number,
+    index: number,
+    block: {
+      id: string,
+      height: number,
+      ...,
+    },
+    ...
+  },
   ...,
 };
 export type getApiV0TransactionsP1Response = getApiV0TransactionsP1SuccessResponse | FailResponse;
