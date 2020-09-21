@@ -83,6 +83,7 @@ const specs: Array<Spec> = [
       // Must skip 'confirmationsCount' when comparing.
       // since the # of confirmations since we wrote this test keeps increasing
       const normalizeTxString = (tx: getApiV0TransactionsP1SuccessResponse) => {
+        // $FlowExpectedError[incompatible-type] delete on purpose to match test
         delete tx.summary.confirmationsCount;
         return tx;
       };

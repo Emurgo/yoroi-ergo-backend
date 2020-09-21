@@ -215,14 +215,6 @@ export type getApiV0AddressesP1Response = getApiV0AddressesP1SuccessResponse | F
 
 // api/v0/transactions/${txHash}
 export type getApiV0TransactionsP1SuccessResponse = {
-  "id": string,
-  "miniBlockInfo": {
-    "id": string,
-    "height": number,
-    ...,
-  },
-  "timestamp": number,
-  "confirmationsCount": number,
   "inputs": Array<{
     "id": string,
     "spendingProof": string,
@@ -262,7 +254,6 @@ export type getApiV0TransactionsP1SuccessResponse = {
     "mainChain": boolean,
     ...,
   }>,
-  "size": number,
   "ioSummary": {
     "totalCoinsTransferred": number,
     "totalFee": number,
@@ -271,6 +262,7 @@ export type getApiV0TransactionsP1SuccessResponse = {
   },
   "summary": {
     id: string,
+    confirmationsCount: number,
     timestamp: number,
     size: number,
     index: number,
