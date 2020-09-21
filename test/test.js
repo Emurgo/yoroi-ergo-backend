@@ -217,6 +217,7 @@ const EXPECTED_TX_BODIES = {
       "id": "c8df2f2d0dca51ab9a375ad9c77322cc11ebd7f3ba088168797e06371a573818",
       "timestamp": 1595254048692,
       "size": 298,
+      "index": 1,
       "block": {
         "id": "a4e7c126bb3f26384efff11157b24fc09020f56bc782ad5b821097eeb6165dc1",
         "height": 277204
@@ -229,10 +230,12 @@ const EXPECTED_TX_BODIES = {
     },
     "inputs": [{
       "id": "10e1a0c4b70c039e247e46009f31cc476af7bc11427c87d9faf44962ca9df58b",
+      "index": 0,
       "spendingProof": "83ba8176e1160b53f4099cd084797011fbd8524df3a4e4ece19b6f919c4e2af011b84d908c2c255acf3285afc00d4065a7b56a4b1daa52fe",
       "value": 11580000000,
       "transactionId": "c8df2f2d0dca51ab9a375ad9c77322cc11ebd7f3ba088168797e06371a573818",
       "outputTransactionId": "afba0bbc18411f581250baa195f0c0905a37bf2b0e15328b23184541c5907897",
+      "outputIndex": 0,
       "address": "9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP"
     }],
     "dataInputs": [],
@@ -279,6 +282,7 @@ const EXPECTED_TX_BODIES = {
       "id": "c3f4930a770fca607177967684931b45b46e8bc35b3d1466c48feb927561a8ba",
       "timestamp": 1595325403313,
       "size": 298,
+      "index": 1,
       "block": {
         "id": "1e7cdc9a94a0550ceaf67ef07065e8eb94f1833270423de4934e5895557976f6",
         "height": 277739
@@ -291,10 +295,12 @@ const EXPECTED_TX_BODIES = {
     },
     "inputs": [{
       "id": "ec3282762e5060dd41927b4d11995bfef4c9b24ab3338c01cc3e43bdbd4eff7c",
+      "index": 0,
       "spendingProof": "a1c8fd9ebeb137f35f2895b19261cc49d5809914a55ea2217f76c9fa6757bee3be64bd28534716c42d7a85c57f17040604b4064d18eae247",
       "value": 11479000000,
       "transactionId": "c3f4930a770fca607177967684931b45b46e8bc35b3d1466c48feb927561a8ba",
       "outputTransactionId": "c8df2f2d0dca51ab9a375ad9c77322cc11ebd7f3ba088168797e06371a573818",
+      "outputIndex": 2,
       "address": "9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP"
     }],
     "dataInputs": [],
