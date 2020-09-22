@@ -15,7 +15,7 @@ in rec {
 
   inherit (callPackage npm-to-nix {}) npmToNix;
 
-  yoroi-graphql-migration-backend = stdenv.mkDerivation rec {
+  yoroi-ergo-backend = stdenv.mkDerivation rec {
     pname = "yoroi-ergo-backend";
     version = packageJSON.version;
     src = ./.;
