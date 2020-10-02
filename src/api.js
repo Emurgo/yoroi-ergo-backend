@@ -134,7 +134,7 @@ const signed: HandlerFunction = async function (req, _res) {
       `${config.backend.explorer}/api/v0/transactions/send`,
       {
         method: 'post',
-        body,
+        body: JSON.stringify(body),
       })
 
   if (resp.status !== 200) {
@@ -266,7 +266,7 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
     `${config.backend.explorer}/api/v0/transactions/${txHash}`
   );
   if (resp.status !== 200) {
-    return { kind: 'error', errMsg: `error sending transaction`};
+    return { kind: 'error', errMsg: `error getting tx body`};
   }
 
   const txBody: getApiV0TransactionsP1SuccessResponse = await resp.json();
