@@ -65,8 +65,6 @@ const askInChainTransaction = async (
     , afterTxHash: ?string
     , untilNum: number
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0AddressesP1TransactionsItem>>> => {
-  let output: Array<getApiV0AddressesP1TransactionsItem> = [];
-
   const inChainResponses = await Promise.all(addresses.map((address) => (
     fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
   )));
@@ -90,6 +88,8 @@ const askInChainTransaction = async (
     kind: 'ok',
     value: [],
   };
+
+  let output: Array<getApiV0AddressesP1TransactionsItem> = [];
 
   // 1) Cutoff by block
   for(const response of unfilteredResponses) {
@@ -139,20 +139,28 @@ const askInChainTransaction = async (
 const askPendingTransaction = async (
   addresses: string[]
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0TransactionsUnconfirmedByaddressP1Item>>> => {
-  let output: Array<getApiV0TransactionsUnconfirmedByaddressP1Item> = [];
-
   const pendingResponses = await Promise.all(addresses.map((address) => (
-      fetch(`${config.backend.explorer}/api/v0/transactions/unconfirmed/byAddress/${address}`)
+    fetch(`${config.backend.explorer}/api/v0/transactions/unconfirmed/byAddress/${address}`)
   )));
 
+  // note: important to remove duplicates
+  const seenTransactions = new Set<string>();
+
+  const unfilteredResponses: Array<getApiV0TransactionsUnconfirmedByaddressP1Item> = [];
   for (const response of pendingResponses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying pending transactions for address`};
     const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = await response.json();
-    output.push(...json.items);
+
+    for (const item of json.items) {
+      if (seenTransactions.has(item.id)) continue;
+
+      seenTransactions.add(item.id);
+      unfilteredResponses.push(item);
+    }
   }
 
   // sort only by time since the tx is not in a block yet
-  const value = output.sort((tx1, tx2) => tx1.creationTimestamp - tx2.creationTimestamp);
+  const value = unfilteredResponses.sort((tx1, tx2) => tx1.creationTimestamp - tx2.creationTimestamp);
 
   return {
     kind: 'ok',

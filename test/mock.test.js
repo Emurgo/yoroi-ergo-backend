@@ -18,7 +18,10 @@ const specs: Array<Spec> = [
     method: 'post',
     endpoint: '/api/v2/txs/history',
     input: {
-      addresses: ['9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP'],
+      addresses: [
+        '9hHv758WyXQz3jW6W6cHufHqvcSk5rFv515JumKxrfwnR6iFcFv',
+        '9eed7e8rBNurhftFCBNEt1PbHQHpktzU6vJonKexHoh43kHrRvP'
+      ],
       after: {
         block: 'ac4740b30371f48703f69b280ce74823539c4f7d4bc9d9368194912d12dcb287',
         tx: '3cb50adbf9ece09b900c63d12bf7edf39acf3df992b1139d2fa0ad02d4dfe20b',

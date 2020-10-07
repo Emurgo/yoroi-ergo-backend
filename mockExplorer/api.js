@@ -44,6 +44,25 @@ const txsForAddress: HandlerFunction = async function (req, _res) {
   });
   const result = [];
 
+  // make sure duplicate txs are ignored
+  if (req.params.address === '9hHv758WyXQz3jW6W6cHufHqvcSk5rFv515JumKxrfwnR6iFcFv') {
+    let i = 30;
+    result.push(genTx(
+      i.toString(),
+      i.toString(),
+      i,
+      0,
+      i,
+    ));
+    return {
+      status: 200,
+      body: {
+        items: result,
+        total: result.length,
+      }
+    };
+  }
+
   // tx should be excluded by the "after" statement
   result.push(genTx(
     "0",
