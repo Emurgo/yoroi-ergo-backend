@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "dev": "nodemon --exec babel-node src/index.js | bunyan",
+    "remote:test": "jest ./test/real.test.js",
+    "remote:dev": "nodemon --exec babel-node src/index.js | bunyan",
+    "mock:explorer": "nodemon --exec babel-node mockExplorer/index.js | bunyan",
+    "mock:backend": "NODE_ENV=mock nodemon --exec babel-node src/index.js | bunyan",
+    "mock:test": "jest ./test/mock.test.js",
     "flow": "flow",
     "lint": "eslint src test",
     "_flow-remove-types": "flow-remove-types ./src/ -d ./flow-removed/ --all --pretty",

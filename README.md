@@ -241,18 +241,18 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
 
 ## Development
 
-`npm run dev`
+`npm run remote:dev`
 
 ## Test
 
 Tests still depend on querying a remote explore endpoint. The easiest way to do it is to
 
-1) Start the endpoint connection with `npm run dev`
-2) Run the tests with `npm run test`
+1) Start the endpoint connection with `npm run remote:dev`
+2) Run the tests with `npm run remote:test`
 
 ### Test a single endpoint (using `utxoSumForAddresses` as an example)
 
-`npm run test -- -t utxoSumForAddresses`
+`npm run remote:test -- -t utxoSumForAddresses`
 
 ## Production
 

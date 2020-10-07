@@ -68,7 +68,7 @@ const askInChainTransaction = async (
   let output: Array<getApiV0AddressesP1TransactionsItem> = [];
 
   const inChainResponses = await Promise.all(addresses.map((address) => (
-      fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
+    fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
   )));
 
   // note: important to remove duplicates
@@ -78,7 +78,6 @@ const askInChainTransaction = async (
   for (const response of inChainResponses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying transactions for address`};
     const json: getApiV0AddressesP1TransactionsSuccessResponse = await response.json();
-
     for (const item of json.items) {
       if (seenTransactions.has(item.id)) continue;
 
