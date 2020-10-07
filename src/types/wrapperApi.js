@@ -38,31 +38,62 @@ export type HistoryInput = {|
   |},
   untilBlock: string, // block hash - inclusive
 |};
-export type HistoryOutput = Array<{|
-  // information that is only present if block is included in the blockchain
-  block_num: null | number,
+export type HistoryOutput = Array<{
   block_hash: null | string,
+  block_num: null | number,
   tx_ordinal: null | number,
-  time: null | string, // timestamp with timezone
-  epoch: null | number,
-  slot: null | number,
+  epoch: null | 0, // TODO
+  slot: null | 0, // TODO
 
-  // information that is always present
   hash: string,
-  last_update: string, // timestamp with timezone
-  tx_state: 'Successful' | 'Failed' | 'Pending',
-  inputs: Array<{| // these will be ordered by the input transaction id asc
+  time: string,
+  tx_state: 'Successful' | 'Pending', // explorer doesn't handle failed transactions
+  inputs: $ReadOnlyArray<$ReadOnly<{
+    // these will be ordered by the input transaction id asc
     address: string,
-    amount: string,
-    id: string, // concatenation of txHash || index
+    id: string,
+    outputTransactionId: string,
     index: number,
-    txHash: string,
-  |}>,
-  outputs: Array<{| //these will be ordered by transaction index asc.
+    outputIndex: number, // index in tx that created the output we're consuming
+    spendingProof: string | $ReadOnly<{
+      proofBytes: null | string,
+      extension: $ReadOnly<{...}>,
+      ...,
+    }>,
+    transactionId: string,
+    value: number,
+    ...,
+  }>>,
+  dataInputs: $ReadOnlyArray<$ReadOnly<{
+    // these will be ordered by the input transaction id asc
+    id: string,
+    value: number,
+    transactionId: string,
+    outputIndex: number,
+    outputTransactionId: string,
     address: string,
-    amount: string,
-  |}>,
-|}>;
+    ...,
+  }>>,
+  +outputs: $ReadOnlyArray<$ReadOnly<{
+    // these will be ordered by the output transaction id asc
+    additionalRegisters: $ReadOnly<{ ... }>,
+    address: string,
+    assets: $ReadOnlyArray<$ReadOnly<{
+      +amount: number,
+      +tokenId: string,
+      ...
+    }>>,
+    creationHeight: number,
+    ergoTree: string,
+    id: string,
+    txId: string,
+    index: number,
+    mainChain?: boolean,
+    spentTransactionId?: null | string,
+    value: number,
+    ...
+  }>>,
+}>;
 
 export type StatusOutput = {|
   isServerOk: boolean

@@ -318,3 +318,59 @@ export type postApiV0TransactionsSendRequest = {|
   |}>,
   size?: number,
 |};
+
+// api/v0/transactions/unconfirmed/byAddress/{p1}
+export type getApiV0TransactionsUnconfirmedByaddressP1Item = {
+  "id": string,
+  "inputs": Array<{
+    "id": string,
+    "spendingProof": {
+      "proofBytes": string,
+      "extension": {...},
+      ...,
+    },
+    "value": number,
+    "index": number,
+    "outputIndex": number,
+    "transactionId": string,
+    "outputTransactionId": string,
+    "address": string,
+    ...,
+  }>,
+  "dataInputs": Array<{
+    "id": string,
+    "value": number,
+    "transactionId": string,
+    "index": number,
+    "outputIndex": number,
+    "outputTransactionId": string,
+    "address": string,
+    ...,
+  }>,
+  "outputs": Array<{
+    "id": string,
+    "value": number,
+    "txId": string,
+    "index": number,
+    "creationHeight": number,
+    "ergoTree": string,
+    "address": string,
+    "assets": Array<{
+      "tokenId": string,
+      "amount": number,
+      ...,
+    }>,
+    "additionalRegisters": {...},
+    ...,
+  }>,
+  "creationTimestamp": number,
+  "size": number,
+  ...,
+}
+export type getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = {
+  "items": Array<getApiV0TransactionsUnconfirmedByaddressP1Item>,
+  "total": number,
+  ...,
+};
+
+export type getApiV0TransactionsUnconfirmedByaddressP1Response = getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse | FailResponse;

@@ -105,29 +105,43 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
   Output:
   ```
   Array<{
-    block_hash: string,
-    block_num: number,
+    block_hash: null | string,
+    block_num: null | number,
+    tx_ordinal: null | number,
+    epoch: null | 0, // TODO
+    slot: null | 0, // TODO
+
     hash: string,
+    time: string,
+    tx_state: 'Successful' | 'Pending', // explorer doesn't handle failed transactions
     inputs: Array<{
+      // these will be ordered by the input transaction id asc
       address: string,
       id: string,
       outputTransactionId: string,
       index: number,
       outputIndex: number, // index in tx that created the output we're consuming
-      spendingProof: string,
+      spendingProof: string | {
+        proofBytes: null | string,
+        extension: {...},
+        ...,
+      },
       transactionId: string,
       value: number,
-      ...
+      ...,
     }>,
     dataInputs: Array<{
+      // these will be ordered by the input transaction id asc
       id: string,
       value: number,
       transactionId: string,
       outputIndex: number,
       outputTransactionId: string,
       address: string,
+      ...,
     }>,
     outputs: Array<{
+      // these will be ordered by the output transaction id asc
       additionalRegisters: { ... },
       address: string,
       assets: Array<{
@@ -140,15 +154,11 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       id: string,
       txId: string,
       index: number,
-      mainChain: boolean,
-      spentTransactionId: null | string,
+      mainChain?: boolean,
+      spentTransactionId?: null | string,
       value: number,
       ...
     }>,
-    epoch: 0, // TODO
-    slot: 0, // TODO
-    time: string, // ISO string
-    tx_state: 'Successful', // explorer doesn't handle pending transactions
   }>
   ```
 </details>
