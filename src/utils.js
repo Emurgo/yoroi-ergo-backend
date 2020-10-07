@@ -21,7 +21,7 @@ const validateAddressesReq = (addressRequestLimit: number, addresses: string[]):
     return { kind: "ok", value: addresses };
 };
 
-const validateHistoryReq = (addressRequestLimit:number, apiResponseLimit:number, data: HistoryInput): UtilEither<HistoryInput> => {
+const validateHistoryReq = (addressRequestLimit: number, apiResponseLimit: number, data: HistoryInput): UtilEither<HistoryInput> => {
     if(!('addresses' in data))
         return {kind:"error", errMsg: "body.addresses does not exist."};
     if(!('untilBlock' in data))

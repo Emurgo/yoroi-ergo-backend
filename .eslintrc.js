@@ -15,7 +15,11 @@ module.exports = {
         "flowtype",
         "jest",
     ],
+    extends: [
+        "plugin:flowtype/recommended"
+    ],
     "rules": {
         "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+        "flowtype/generic-spacing": 0
     }
 };

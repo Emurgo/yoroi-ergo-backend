@@ -12,7 +12,7 @@ import type {
   FilterUsedInput,
   FilterUsedOutput,
   TxBodiesInput,
-  HistoryInput,
+  HistoryInput, HistoryOutput,
   StatusOutput,
 } from './types/wrapperApi';
 import type {
@@ -22,7 +22,9 @@ import type {
 import type {
   getApiV0BlocksP1SuccessResponse,
   getApiV0AddressesP1TransactionsSuccessResponse,
+  getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse,
   getApiV0AddressesP1TransactionsItem,
+  getApiV0TransactionsUnconfirmedByaddressP1Item,
   getApiV0BlocksSuccessResponse,
   postApiV0TransactionsSendSuccessResponse,
   postApiV0TransactionsSendRequest,
@@ -56,25 +58,30 @@ const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEit
   return {kind:'error', errMsg: 'tx not found.'};
 }
 
-const askTransactionHistory = async (
-    limit: number
+const askInChainTransaction = async (
+  limit: number
     , addresses: string[]
     , afterNum: number
     , afterTxHash: ?string
     , untilNum: number
-  ) : Promise<UtilEither<Array<getApiV0AddressesP1TransactionsItem>>> => {
-
-  let output: Array<getApiV0AddressesP1TransactionsItem> = [];
-
-  const responses =  await Promise.all(addresses.map((address) => (
-      fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
+): Promise<UtilEither<$ReadOnlyArray<getApiV0AddressesP1TransactionsItem>>> => {
+  const inChainResponses = await Promise.all(addresses.map((address) => (
+    fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
   )));
 
+  // note: important to remove duplicates
+  const seenTransactions = new Set<string>();
+
   const unfilteredResponses: Array<getApiV0AddressesP1TransactionsItem> = [];
-  for (const response of responses) {
+  for (const response of inChainResponses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying transactions for address`};
     const json: getApiV0AddressesP1TransactionsSuccessResponse = await response.json();
-    unfilteredResponses.push(...json.items);
+    for (const item of json.items) {
+      if (seenTransactions.has(item.id)) continue;
+
+      seenTransactions.add(item.id);
+      unfilteredResponses.push(item);
+    }
   }
 
   if (unfilteredResponses.length == 0) return {
@@ -82,6 +89,9 @@ const askTransactionHistory = async (
     value: [],
   };
 
+  let output: Array<getApiV0AddressesP1TransactionsItem> = [];
+
+  // 1) Cutoff by block
   for(const response of unfilteredResponses) {
     // filter by limit after and until
     const creationHeight = response.inclusionHeight;
@@ -94,17 +104,117 @@ const askTransactionHistory = async (
     output.push(response);
   }
 
+  // 2) Cutoff by transaction
   if (afterTxHash != undefined) {
     const index = output
       .findIndex((tx) => (tx.id === afterTxHash))
-    if (index != undefined) {
-      output = output.slice(index + 1)
-    }
+
+    // recall: check inside askBlockNum should guarantee this exists
+    if (index == null) return {kind:'error', errMsg: `tx not found.`};
+    output = output.slice(index + 1)
   }
+
+  // 3) sort the result
+  output.sort((tx1, tx2) => {
+    // 1st sort by block height
+    const heightDiff = tx1.inclusionHeight - tx2.inclusionHeight;
+    if (heightDiff != 0) return heightDiff;
+
+    // 2nd sort by index in tx
+    const indexDiff = tx1.index - tx2.index;
+    if (indexDiff != 0) return indexDiff;
+
+    // we should never see the same transaction twice since we de-duplicated
+    throw new Error(`askInChainTransaction same transaction occurs twice ${tx1.id}`)
+  });
+
+  // 4) cutoff to max response length
+  const value = output.splice(0, apiResponseLimit);
 
   return {
     kind: 'ok',
-    value: output,
+    value,
+  };
+}
+const askPendingTransaction = async (
+  addresses: string[]
+): Promise<UtilEither<$ReadOnlyArray<getApiV0TransactionsUnconfirmedByaddressP1Item>>> => {
+  const pendingResponses = await Promise.all(addresses.map((address) => (
+    fetch(`${config.backend.explorer}/api/v0/transactions/unconfirmed/byAddress/${address}`)
+  )));
+
+  // note: important to remove duplicates
+  const seenTransactions = new Set<string>();
+
+  const unfilteredResponses: Array<getApiV0TransactionsUnconfirmedByaddressP1Item> = [];
+  for (const response of pendingResponses) {
+    if (response.status !== 200) return {kind:'error', errMsg: `error querying pending transactions for address`};
+    const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = await response.json();
+
+    for (const item of json.items) {
+      if (seenTransactions.has(item.id)) continue;
+
+      seenTransactions.add(item.id);
+      unfilteredResponses.push(item);
+    }
+  }
+
+  // sort only by time since the tx is not in a block yet
+  const value = unfilteredResponses.sort((tx1, tx2) => tx1.creationTimestamp - tx2.creationTimestamp);
+
+  return {
+    kind: 'ok',
+    value,
+  };
+}
+
+const askTransactionHistory = async (
+    limit: number
+    , addresses: string[]
+    , afterNum: number
+    , afterTxHash: ?string
+    , untilNum: number
+  ): Promise<UtilEither<{|
+    inChain: $ReadOnlyArray<getApiV0AddressesP1TransactionsItem>,
+    pending: $ReadOnlyArray<getApiV0TransactionsUnconfirmedByaddressP1Item>,
+  |}
+  >> => {
+  const inChain = await askInChainTransaction(
+    limit,
+    addresses,
+    afterNum,
+    afterTxHash,
+    untilNum
+  );
+  if (inChain.kind === 'error') {
+    return inChain;
+  }
+
+  const inChainTxs = inChain.value;
+  // if we're already at the response limit, don't both fetching pending txs
+  if (inChainTxs.length === apiResponseLimit) {
+    return {
+      kind: 'ok',
+      value: {
+        inChain: inChainTxs,
+        pending: [],
+      },
+    };
+  }
+
+  const pending = await askPendingTransaction(addresses);
+  if (pending.kind === 'error') {
+    return pending;
+  }
+  // only add pending transactions up to the point where we reach apiResponseLimit
+  const pendingTxs = pending.value.slice(0, apiResponseLimit - inChainTxs.length);
+
+  return {
+    kind: 'ok',
+    value: {
+      inChain: inChainTxs,
+      pending: pendingTxs,
+    },
   };
 }
 
@@ -131,11 +241,12 @@ const signed: HandlerFunction = async function (req, _res) {
   const body: postApiV0TransactionsSendRequest = req.body;
 
   const resp = await fetch(
-      `${config.backend.explorer}/api/v0/transactions/send`,
-      {
-        method: 'post',
-        body: JSON.stringify(body),
-      })
+    `${config.backend.explorer}/api/v0/transactions/send`,
+    {
+      method: 'post',
+      body: JSON.stringify(body),
+    }
+  )
 
   if (resp.status !== 200) {
     return { status: 400, body: `error sending transaction`};
@@ -329,22 +440,46 @@ const history: HandlerFunction = async function (req, _res) {
       if (unformattedTxs.kind === 'error') {
         return { status: 400, body: unformattedTxs.errMsg}
       }
-      const txs = unformattedTxs.value.map((tx) => {
+
+      const txs: HistoryOutput = [];
+      // 1) first add the in-chain txs
+      for (const tx of unformattedTxs.value.inChain) {
         const iso8601date = new Date(tx.timestamp).toISOString()
-        return {
-          hash: tx.id,
-          tx_state: 'Successful', // explorer doesn't handle pending transactions
+        txs.push({
+          block_hash: tx.headerId,
           block_num: tx.inclusionHeight,
           tx_ordinal: tx.index,
-          block_hash: tx.headerId,
-          time: iso8601date,
           epoch: 0, // TODO
           slot: 0, // TODO
+
+          hash: tx.id,
+          time: iso8601date,
+          tx_state: 'Successful',
           inputs: tx.inputs,
           dataInputs: tx.dataInputs,
-          outputs: tx.outputs
-        }
-      });
+          outputs: tx.outputs,
+        });
+      }
+      // 2) add the pending txs
+      for (const tx of unformattedTxs.value.pending) {
+        const iso8601date = new Date(tx.creationTimestamp).toISOString()
+        txs.push({
+          block_hash: null,
+          block_num: null,
+          tx_ordinal: null,
+          epoch: null,
+          slot: null,
+
+          hash: tx.id,
+          time: iso8601date,
+          tx_state: 'Pending',
+          inputs: tx.inputs,
+          dataInputs: tx.dataInputs,
+          outputs: tx.outputs.map(output => ({
+            ...output,
+          })),
+        });
+      }
 
       return { status: 200, body: txs };
     }
