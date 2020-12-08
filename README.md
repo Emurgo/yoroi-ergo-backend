@@ -225,6 +225,27 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
 </details>
 
 <details>
+  <summary>api/assets/info</summary>
+
+  Input:
+  ```
+  {
+    assetIds: string[]
+  }
+  ```
+  Output:
+  ```
+  {
+    [assetId: string]: {
+      name: null | string,
+      desc: null | string,
+      numDecimals: null | string,
+    }
+  }
+  ```
+</details>
+
+<details>
   <summary>api/status</summary>
 
   Input:

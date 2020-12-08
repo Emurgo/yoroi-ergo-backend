@@ -98,3 +98,15 @@ export type HistoryOutput = Array<{
 export type StatusOutput = {|
   isServerOk: boolean
 |}
+
+export type AssetInfoInput = {|
+  assetIds: Array<string>
+|};
+export type AssetInfo = {|
+  name: null | string,
+  desc: null | string,
+  numDecimals: null | string,
+|};
+export type AssetInfoOut = {|
+  [assetId: string]: AssetInfo
+|};
