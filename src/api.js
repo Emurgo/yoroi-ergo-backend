@@ -170,6 +170,14 @@ const askPendingTransaction = async (
   };
 }
 
+/**
+ * try parsing an int (base 10) and return NaN if it fails
+ * Can't use parseInt because parseInt('1a') returns '1' instead of failing
+ */
+function intOrNaN (x) {
+  return /^[0-9a-fA-F]+$/.test(x) ? Number.parseInt(x, 16) : NaN
+}
+
 const askAssetInfo = async (
   assetId: string
 ): Promise<UtilEither<[string, AssetInfo]>> => {
@@ -190,7 +198,14 @@ const askAssetInfo = async (
   const decode = (field: void | string): null | string => {
     if (field == null) return null;
     // recall: every encoding start with 0e then one byte for length
-    const bytes = Buffer.from(field.substring('0eff'.length), 'hex');
+    if (field.length < 3 * 2) return null; // minimum 3 bytes: 1 for prefix, 1 for length, 1 for content
+
+    const expectedSize = intOrNaN(field.substring(2, 4));
+    if (isNaN(expectedSize)) return null;
+    const content = field.substring('0eff'.length);
+    if (content.length != 2 * expectedSize) return null;
+
+    const bytes = Buffer.from(content, 'hex');
     var string = new TextDecoder('utf-8').decode(bytes);
 
     return string;

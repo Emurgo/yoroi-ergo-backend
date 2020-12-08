@@ -112,6 +112,7 @@ const specs: Array<Spec> = [
     input: { assetIds: [
       'fb848441f6cad04de3235b290697329cc96852660da4b7c7b8a6b68e99a0a3ff',
       '82ebfb6141fbf31bd4a131017af86e24b5c367b17b3a30b3828bd419cf302dc9',
+      '3ff9fdfcda75531d1b5933d016a128bacf92e33817ba9441a4838ba3f247da31',
     ] },
     output: (output) => {
       expect(output['fb848441f6cad04de3235b290697329cc96852660da4b7c7b8a6b68e99a0a3ff']).toEqual({
@@ -123,6 +124,11 @@ const specs: Array<Spec> = [
         name: 'Coinbarn',
         desc: 'test token of coinbarn.app',
         numDecimals: '3',
+      });
+      expect(output['3ff9fdfcda75531d1b5933d016a128bacf92e33817ba9441a4838ba3f247da31']).toEqual({
+        name: '.;.',
+        desc: `';`,
+        numDecimals: null,
       });
     },
   },
