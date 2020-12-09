@@ -14,6 +14,7 @@ import type {
   TxBodiesInput,
   HistoryInput, HistoryOutput,
   StatusOutput,
+  AssetInfoInput, AssetInfoOut, AssetInfo,
 } from './types/wrapperApi';
 import type {
   HandlerFunction,
@@ -30,6 +31,7 @@ import type {
   postApiV0TransactionsSendRequest,
   getApiV0TransactionsP1SuccessResponse,
   getApiV0AddressesP1SuccessResponse,
+  getApiV0AssetsP1IssuingboxSuccessResponse,
 } from './types/explorer';
 
 const addressesRequestLimit = 50;
@@ -165,6 +167,60 @@ const askPendingTransaction = async (
   return {
     kind: 'ok',
     value,
+  };
+}
+
+/**
+ * try parsing an int (base 10) and return NaN if it fails
+ * Can't use parseInt because parseInt('1a') returns '1' instead of failing
+ */
+function intOrNaN (x) {
+  return /^[0-9a-fA-F]+$/.test(x) ? Number.parseInt(x, 16) : NaN
+}
+
+const askAssetInfo = async (
+  assetId: string
+): Promise<UtilEither<[string, AssetInfo]>> => {
+  const response = await fetch(
+    `${config.backend.explorer}/api/v0/assets/${assetId}/issuingBox`
+  );
+
+  // a 500 error is returned if no issuing box was found for this asset
+  if (response.status !== 200) return {kind:'error', errMsg: response.reason};
+  const json: getApiV0AssetsP1IssuingboxSuccessResponse = await response.json();
+
+  // although this endpoint returns an array, it should always return exactly one box
+  if (json.length < 1) return {kind:'error', errMsg: `No issuing box found for ${assetId}`};
+  const box = json[0];
+
+  // note: the following code is all according to EIP-4
+  // https://github.com/ergoplatform/eips/blob/master/eip-0004.md
+  const decode = (field: void | string): null | string => {
+    if (field == null) return null;
+    // recall: every encoding start with 0e then one byte for length
+    if (field.length < 3 * 2) return null; // minimum 3 bytes: 1 for prefix, 1 for length, 1 for content
+
+    const expectedSize = intOrNaN(field.substring(2, 4));
+    if (isNaN(expectedSize)) return null;
+    const content = field.substring('0eff'.length);
+    if (content.length != 2 * expectedSize) return null;
+
+    const bytes = Buffer.from(content, 'hex');
+    var string = new TextDecoder('utf-8').decode(bytes);
+
+    return string;
+  }
+
+  return {
+    kind: 'ok',
+    value: [
+      assetId,
+      {
+        name: decode(box.additionalRegisters['R4']),
+        desc: decode(box.additionalRegisters['R5']),
+        numDecimals: decode(box.additionalRegisters['R6']),
+      },
+    ],
   };
 }
 
@@ -490,6 +546,23 @@ const history: HandlerFunction = async function (req, _res) {
   }
 }
 
+const assetsInfo: HandlerFunction = async function (req, _res) {
+  const input: AssetInfoInput = req.body;
+
+  const assetResponses = await Promise.all(
+    input.assetIds.map((asset) => askAssetInfo(asset))
+  );
+  const result: AssetInfoOut = {};
+  for (const entry of assetResponses) {
+    if (entry.kind === 'error') {
+      return {status: 400, body: entry.errMsg};
+    }
+    result[entry.value[0]] = entry.value[1];
+  }
+
+  return { status: 200, body: result };
+}
+
 const status: HandlerFunction = async function (_req, _res) {
   const resp = await fetch(
       `${config.backend.explorer}/api/v0/info`
@@ -506,6 +579,7 @@ exports.handlers = [
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
   { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
   { method: 'post', url: '/api/v2/txs/history', handler: history },
+  { method: 'post', url: '/api/assets/info', handler: assetsInfo },
   { method: 'get', url: '/api/v2/bestblock', handler: bestBlock },
   { method: 'post', url: '/api/txs/signed', handler: signed },
   { method: 'get', url: '/api/status', handler: status },

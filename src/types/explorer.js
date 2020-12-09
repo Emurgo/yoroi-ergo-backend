@@ -374,3 +374,24 @@ export type getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = {
 };
 
 export type getApiV0TransactionsUnconfirmedByaddressP1Response = getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse | FailResponse;
+
+// api/v0/assets/{p1}/issuingBox
+export type getApiV0AssetsP1IssuingboxSuccessResponse = Array<{
+    id: string,
+    txId: string,
+    value: number,
+    index: number,
+    creationHeight: number,
+    ergoTree: string,
+    address: string,
+    assets: [{
+      tokenId: string,
+      index: number,
+      amount: number,
+      ...,
+    }],
+    additionalRegisters: {| [key: string]: string /* hex */ |},
+    spentTransactionId: string,
+    mainChain: boolean
+}>
+export type getApiV0AssetsP1IssuingboxResponse = getApiV0AssetsP1IssuingboxSuccessResponse | FailResponse;
