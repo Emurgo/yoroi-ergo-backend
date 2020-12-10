@@ -174,8 +174,13 @@ const askPendingTransaction = async (
  * try parsing an int (base 10) and return NaN if it fails
  * Can't use parseInt because parseInt('1a') returns '1' instead of failing
  */
-function intOrNaN (x) {
+function hexToIntOrNaN(x: string) {
   return /^[0-9a-fA-F]+$/.test(x) ? Number.parseInt(x, 16) : NaN
+}
+
+function numDecimalsToNum(x: string | null): number | null {
+  if (x == null) return x;
+  return /^[0-9]+$/.test(x) ? Number.parseInt(x, 10) : null
 }
 
 const askAssetInfo = async (
@@ -200,7 +205,7 @@ const askAssetInfo = async (
     // recall: every encoding start with 0e then one byte for length
     if (field.length < 3 * 2) return null; // minimum 3 bytes: 1 for prefix, 1 for length, 1 for content
 
-    const expectedSize = intOrNaN(field.substring(2, 4));
+    const expectedSize = hexToIntOrNaN(field.substring(2, 4));
     if (isNaN(expectedSize)) return null;
     const content = field.substring('0eff'.length);
     if (content.length != 2 * expectedSize) return null;
@@ -218,7 +223,9 @@ const askAssetInfo = async (
       {
         name: decode(box.additionalRegisters['R4']),
         desc: decode(box.additionalRegisters['R5']),
-        numDecimals: decode(box.additionalRegisters['R6']),
+        numDecimals: numDecimalsToNum(decode(box.additionalRegisters['R6'])),
+        boxId: box.id,
+        height: box.creationHeight,
       },
     ],
   };
