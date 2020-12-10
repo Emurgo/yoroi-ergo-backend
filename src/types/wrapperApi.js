@@ -105,7 +105,10 @@ export type AssetInfoInput = {|
 export type AssetInfo = {|
   name: null | string,
   desc: null | string,
-  numDecimals: null | string,
+  numDecimals: null | number,
+  // information about box that defined the metadata for this token
+  height: null | number,
+  boxId: string,
 |};
 export type AssetInfoOut = {|
   [assetId: string]: AssetInfo

@@ -239,7 +239,10 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
     [assetId: string]: {
       name: null | string,
       desc: null | string,
-      numDecimals: null | string,
+      numDecimals: null | number,
+      // information about box that defined the metadata for this token
+      height: null | number,
+      boxId: string,
     }
   }
   ```

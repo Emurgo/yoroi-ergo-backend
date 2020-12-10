@@ -119,16 +119,22 @@ const specs: Array<Spec> = [
         name: null,
         desc: null,
         numDecimals: null,
+        boxId: 'a91a141904823b5aea0b33458a435d0ef3ab15975ca2b6afd07d43fd8bca9476',
+        height: 345903,
       });
       expect(output['82ebfb6141fbf31bd4a131017af86e24b5c367b17b3a30b3828bd419cf302dc9']).toEqual({
         name: 'Coinbarn',
         desc: 'test token of coinbarn.app',
-        numDecimals: '3',
+        numDecimals: 3,
+        boxId: '02030bb1e88597b28e88e807d8308cddde7291527e194fc44b5137fe7452f255',
+        height: 98787,
       });
       expect(output['3ff9fdfcda75531d1b5933d016a128bacf92e33817ba9441a4838ba3f247da31']).toEqual({
         name: '.;.',
         desc: `';`,
         numDecimals: null,
+        boxId: '24052b29cb831d87ac8407e7f4af1851e4763e119ac97dd1de6332411279ecd7',
+        height: 267222,
       });
     },
   },
