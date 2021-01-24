@@ -67,8 +67,25 @@ const askInChainTransaction = async (
     , afterTxHash: ?string
     , untilNum: number
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0AddressesP1TransactionsItem>>> => {
+  const pagination = async (addr, acc, limit, offset) => {
+    const resp = await fetch(
+      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
+    );
+    if (resp.status !== 200) return { errMsg: `error querying transactions for address` };
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+
+    const newAcc = [
+      ...acc,
+      ...r.items,
+    ];
+    if (r.items.length < limit) {
+      return { items: newAcc };
+    }
+    return await pagination(addr, acc, limit, offset + limit);
+  }
+
   const inChainResponses = await Promise.all(addresses.map((address) => (
-    fetch(`${config.backend.explorer}/api/v0/addresses/${address}/transactions`)
+    pagination(address, [], apiResponseLimit, 0)
   )));
 
   // note: important to remove duplicates
@@ -76,9 +93,11 @@ const askInChainTransaction = async (
 
   const unfilteredResponses: Array<getApiV0AddressesP1TransactionsItem> = [];
   for (const response of inChainResponses) {
-    if (response.status !== 200) return {kind:'error', errMsg: `error querying transactions for address`};
-    const json: getApiV0AddressesP1TransactionsSuccessResponse = await response.json();
-    for (const item of json.items) {
+    if (response.errMsg) return {
+      kind:'error',
+      ...response,
+    };
+    for (const item of response.items) {
       if (seenTransactions.has(item.id)) continue;
 
       seenTransactions.add(item.id);
@@ -142,7 +161,8 @@ const askPendingTransaction = async (
   addresses: string[]
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0TransactionsUnconfirmedByaddressP1Item>>> => {
   const pendingResponses = await Promise.all(addresses.map((address) => (
-    fetch(`${config.backend.explorer}/api/v0/transactions/unconfirmed/byAddress/${address}`)
+    // TODO: use offset parameter to paginate pending transactions
+    fetch(`${config.backend.explorer}/api/v0/transactions/unconfirmed/byAddress/${address}?limit=${apiResponseLimit}`)
   )));
 
   // note: important to remove duplicates
@@ -319,14 +339,31 @@ const signed: HandlerFunction = async function (req, _res) {
 };
 
 async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAddressesOutput>> {
-  const resp = await fetch(
-    `${config.backend.explorer}/api/v0/addresses/${address}/transactions`
-  );
-  if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
-  const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+  const pagination = async (addr, acc, limit, offset) => {
+    const resp = await fetch(
+      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
+    );
+    if (resp.status !== 200) return { errMsg: `error querying utxos for address` };
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+
+    const newAcc = [
+      ...acc,
+      ...r.items,
+    ];
+    if (r.items.length < limit) {
+      return { items: newAcc };
+    }
+    return await pagination(addr, acc, limit, offset + limit);
+  }
+  
+  const paginatedResponse = await pagination(address, [], apiResponseLimit, 0);
+  if (paginatedResponse.errMsg) return {
+    kind:'error',
+    ...paginatedResponse,
+  };
 
   // Get all outputs whose `address` matches input address and `spentTransactionId` is `null`.
-  const result = r.items.map(({ outputs }) => (
+  const result = paginatedResponse.items.map(({ outputs }) => (
     outputs
       .map((output, index) => ({ output, index }))
       .filter(({ output, }) =>
