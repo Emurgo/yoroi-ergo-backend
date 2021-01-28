@@ -234,7 +234,7 @@ const specs: Array<Spec> = [
       untilBlock: '5aa15b0eb56ca3c4feab2fc99c53eef6f7fbf4beefa8a0e1bc76e7bd72118a0a',
     },
     output: (output) => {
-      expect(output.length).toBe(103);
+      expect(output.length).toBe(50);
     }
   },
 
