@@ -226,6 +226,19 @@ const specs: Array<Spec> = [
   },
 
   {
+    name: 'history',
+    method: 'post',
+    endpoint: '/api/v2/txs/history',
+    input: {
+      addresses: ['9en2JxyCnQgjgRCaFMXBX87z1VcGjVvd3yug2GVmJXRHw59Evgz'],
+      untilBlock: '5aa15b0eb56ca3c4feab2fc99c53eef6f7fbf4beefa8a0e1bc76e7bd72118a0a',
+    },
+    output: (output) => {
+      expect(output.length).toBe(103);
+    }
+  },
+
+  {
     method: 'get',
     endpoint: '/api/status',
     output: { isServerOk: true },

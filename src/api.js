@@ -81,7 +81,7 @@ const askInChainTransaction = async (
     if (r.items.length < limit) {
       return { items: newAcc };
     }
-    return await pagination(addr, acc, limit, offset + limit);
+    return await pagination(addr, newAcc, limit, offset + limit);
   }
 
   const inChainResponses = await Promise.all(addresses.map((address) => (
@@ -353,7 +353,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
     if (r.items.length < limit) {
       return { items: newAcc };
     }
-    return await pagination(addr, acc, limit, offset + limit);
+    return await pagination(addr, newAcc, limit, offset + limit);
   }
   
   const paginatedResponse = await pagination(address, [], apiResponseLimit, 0);
