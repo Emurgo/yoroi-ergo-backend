@@ -517,81 +517,79 @@ const history: HandlerFunction = async function (req, _res) {
   }
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
 
-  switch (verifiedBody.kind) {
-    case "ok": {
-      const body = verifiedBody.value;
-      const limit = apiResponseLimit;
-      const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
-      const referenceBestBlock = body.untilBlock;
-
-      const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
-      const untilBlockNum = await askBlockNum(referenceBestBlock);
-
-      if (afterBlockNum.kind === 'error') {
-        if (afterBlockNum.errMsg.includes('tx')) {
-          throw new Error("REFERENCE_TX_NOT_FOUND");
-        }
-        if (afterBlockNum.errMsg.includes('block')) {
-          throw new Error("REFERENCE_BLOCK_MISMATCH");
-        }
-        return { status: 400, body: afterBlockNum.errMsg}
-      }
-      if (untilBlockNum.kind === 'error') {
-        throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
-      }
-
-      const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
-      if (unformattedTxs.kind === 'error') {
-        return { status: 400, body: unformattedTxs.errMsg}
-      }
-
-      const txs: HistoryOutput = [];
-      // 1) first add the in-chain txs
-      for (const tx of unformattedTxs.value.inChain) {
-        const iso8601date = new Date(tx.timestamp).toISOString()
-        txs.push({
-          block_hash: tx.headerId,
-          block_num: tx.inclusionHeight,
-          tx_ordinal: tx.index,
-          epoch: 0, // TODO
-          slot: 0, // TODO
-
-          hash: tx.id,
-          time: iso8601date,
-          tx_state: 'Successful',
-          inputs: tx.inputs,
-          dataInputs: tx.dataInputs,
-          outputs: tx.outputs,
-        });
-      }
-      // 2) add the pending txs
-      for (const tx of unformattedTxs.value.pending) {
-        const iso8601date = new Date(tx.creationTimestamp).toISOString()
-        txs.push({
-          block_hash: null,
-          block_num: null,
-          tx_ordinal: null,
-          epoch: null,
-          slot: null,
-
-          hash: tx.id,
-          time: iso8601date,
-          tx_state: 'Pending',
-          inputs: tx.inputs,
-          dataInputs: tx.dataInputs,
-          outputs: tx.outputs.map(output => ({
-            ...output,
-          })),
-        });
-      }
-
-      return { status: 200, body: txs };
-    }
-    case "error": {
-      return { status: 400, body: verifiedBody.errMsg };
-    }
-    default: return utils.assertNever(verifiedBody);
+  if (verifiedBody.kind === 'error') {
+    return { status: 400, body: verifiedBody.errMsg };
   }
+  if (verifiedBody.kind !== 'ok') {
+    return utils.assertNever(verifiedBody);
+  }
+
+  const body = verifiedBody.value;
+  const limit = apiResponseLimit;
+  const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
+  const referenceBestBlock = body.untilBlock;
+
+  const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
+  const untilBlockNum = await askBlockNum(referenceBestBlock);
+
+  if (afterBlockNum.kind === 'error') {
+    if (afterBlockNum.errMsg.includes('tx')) {
+      throw new Error("REFERENCE_TX_NOT_FOUND");
+    }
+    if (afterBlockNum.errMsg.includes('block')) {
+      throw new Error("REFERENCE_BLOCK_MISMATCH");
+    }
+    return { status: 400, body: afterBlockNum.errMsg}
+  }
+  if (untilBlockNum.kind === 'error') {
+    throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
+  }
+
+  const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
+  if (unformattedTxs.kind === 'error') {
+    return { status: 400, body: unformattedTxs.errMsg}
+  }
+
+  const txs: HistoryOutput = [];
+  // 1) first add the in-chain txs
+  for (const tx of unformattedTxs.value.inChain) {
+    const iso8601date = new Date(tx.timestamp).toISOString()
+    txs.push({
+      block_hash: tx.headerId,
+      block_num: tx.inclusionHeight,
+      tx_ordinal: tx.index,
+      epoch: 0, // TODO
+      slot: 0, // TODO
+
+      hash: tx.id,
+      time: iso8601date,
+      tx_state: 'Successful',
+      inputs: tx.inputs,
+      dataInputs: tx.dataInputs,
+      outputs: tx.outputs,
+    });
+  }
+  // 2) add the pending txs
+  for (const tx of unformattedTxs.value.pending) {
+    const iso8601date = new Date(tx.creationTimestamp).toISOString()
+    txs.push({
+      block_hash: null,
+      block_num: null,
+      tx_ordinal: null,
+      epoch: null,
+      slot: null,
+
+      hash: tx.id,
+      time: iso8601date,
+      tx_state: 'Pending',
+      inputs: tx.inputs,
+      dataInputs: tx.dataInputs,
+      outputs: tx.outputs.map(output => ({
+        ...output,
+      })),
+    });
+  }
+  return { status: 200, body: txs };
 }
 
 const assetsInfo: HandlerFunction = async function (req, _res) {
