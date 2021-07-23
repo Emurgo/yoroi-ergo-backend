@@ -76,7 +76,7 @@ const askInChainTransaction = async (
       `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
     );
     if (resp.status !== 200) return { errMsg: `error querying transactions for address` };
-    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
 
     const newAcc = [
       ...acc,
@@ -175,7 +175,7 @@ const askPendingTransaction = async (
   const unfilteredResponses: Array<getApiV0TransactionsUnconfirmedByaddressP1Item> = [];
   for (const response of pendingResponses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying pending transactions for address`};
-    const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = await response.json();
+    const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = JSONBigInt.parse(await response.text());
 
     for (const item of json.items) {
       if (seenTransactions.has(item.id)) continue;
