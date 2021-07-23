@@ -45,8 +45,12 @@ function installHandlers(handlers: HandlerDefinitions) {
         // return int status === 0.
         if (status !== 0) {
           res.status(status);
-          res.header('content-type', 'application/json');
-          res.sendRaw(JSONBigInt.stringify(body));
+          if (status === 200) {
+            res.header('content-type', 'application/json');
+            res.sendRaw(JSONBigInt.stringify(body));
+          } else {
+            res.json(body);
+          }
         }
       } catch (error) {
         req.log.error('handler error', error);
