@@ -38,8 +38,8 @@ import type {
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
 
-const asValue = (x: *): string =>
-  typeof x === 'bigint' ? x.toString() : String(x);
+const isNumberOrBigint = (x: *): boolean =>
+  typeof x === 'number' || typeof x === 'bigint';
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
@@ -348,7 +348,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
       `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
     );
     if (resp.status !== 200) return { errMsg: `error querying utxos for address` };
-    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
 
     const newAcc = [
       ...acc,
@@ -412,8 +412,8 @@ async function getBalanceForAddress(address: string): Promise<UtilEither<number>
     `${config.backend.explorer}/api/v0/addresses/${address}`
   );
   if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
-  const r: getApiV0AddressesP1SuccessResponse = await resp.json();
-  if (r.transactions && typeof r.transactions.confirmedBalance === 'number') {
+  const r: getApiV0AddressesP1SuccessResponse = JSONBigInt.parse(await resp.text());
+  if (r.transactions && isNumberOrBigint(r.transactions.confirmedBalance)) {
     return {
       kind: 'ok',
       value: r.transactions.confirmedBalance,
@@ -436,7 +436,7 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
     if (balance.kind === 'error') {
       return {status: 400, body: balance.errMsg};
     }
-    sum = sum.plus(balance.value);
+    sum = sum.plus(String(balance.value));
   }
   const output: UtxoSumForAddressesOutput = { sum: sum.toString() };
   return { status: 200, body: output };
