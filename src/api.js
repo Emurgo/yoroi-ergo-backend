@@ -3,6 +3,7 @@ const config = require('config');
 const fetch = require('node-fetch');
 const utils = require('./utils');
 const BigNumber = require('bignumber.js');
+const JSONBigInt = require('json-bigint-native');
 
 import type {
   UtxoForAddressesInput,
@@ -36,6 +37,9 @@ import type {
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
+
+const asValue = (x: *): string =>
+  typeof x === 'bigint' ? x.toString() : String(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
@@ -480,7 +484,7 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
     return { kind: 'error', errMsg: `error getting tx body`};
   }
 
-  const txBody: getApiV0TransactionsP1SuccessResponse = await resp.json();
+  const txBody: getApiV0TransactionsP1SuccessResponse = JSONBigInt.parse(await resp.text());
   return {
     kind: 'ok',
     value: [ txHash, txBody ],
