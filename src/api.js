@@ -338,7 +338,7 @@ const signed: HandlerFunction = async function (req, _res) {
   if (resp.status !== 200) {
     return { status: 400, body: `error sending transaction`};
   }
-  const r: postApiV0TransactionsSendSuccessResponse = await resp.json();
+  const r: postApiV0TransactionsSendSuccessResponse = JSONBigInt.parse(await resp.text());
   return { status: 200, body: r };
 };
 
