@@ -39,7 +39,7 @@ const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
 
 const isNumberOrBigint = (x: *): boolean =>
-  typeof x === 'number' || typeof x === 'bigint' || BigNumber.isBigNumber(x);
+  (typeof x === 'number') || BigNumber.isBigNumber(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
