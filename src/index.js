@@ -3,7 +3,7 @@ const restify = require('restify');
 const config = require('config');
 const bunyan = require('bunyan');
 const corsMiddleware = require('restify-cors-middleware');
-const JSONBigInt = require('json-bigint-native');
+const JSONBigInt = require('json-bigint');
 const api = require('./api');
 import type { HandlerDefinitions } from './types/utils';
 

@@ -3,7 +3,7 @@ const config = require('config');
 const fetch = require('node-fetch');
 const utils = require('./utils');
 const BigNumber = require('bignumber.js');
-const JSONBigInt = require('json-bigint-native');
+const JSONBigInt = require('json-bigint');
 
 import type {
   UtxoForAddressesInput,
@@ -39,7 +39,7 @@ const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
 
 const isNumberOrBigint = (x: *): boolean =>
-  typeof x === 'number' || typeof x === 'bigint';
+  typeof x === 'number' || typeof x === 'bigint' || BigNumber.isBigNumber(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
@@ -436,7 +436,7 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
     if (balance.kind === 'error') {
       return {status: 400, body: balance.errMsg};
     }
-    sum = sum.plus(String(balance.value));
+    sum = sum.plus(balance.value);
   }
   const output: UtxoSumForAddressesOutput = { sum: sum.toString() };
   return { status: 200, body: output };
