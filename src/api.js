@@ -325,9 +325,9 @@ const bestBlock: HandlerFunction = async function (_req, _res) {
 };
 
 function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
-  tx.outputs.forEach(o => {
+  tx.outputs?.forEach(o => {
     o.value = new BigNumber(o.value);
-    o.assets.forEach(a => {
+    o.assets?.forEach(a => {
       a.amount = new BigNumber(a.amount);
     });
   });
