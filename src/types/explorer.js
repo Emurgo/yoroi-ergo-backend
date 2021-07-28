@@ -2,6 +2,9 @@
 
 // Types from https://explorer.ergoplatform.com/en/api
 
+import BigNumber from 'bignumber.js';
+type BigNumberType = typeof BigNumber;
+
 type FailResponse = {|
   status: number,
   reason: string,
@@ -305,12 +308,12 @@ export type postApiV0TransactionsSendRequest = {|
   |}>,
   outputs: Array<{|
     boxId?: string, // hex
-    value: number,
+    value: number | string | BigNumberType,
     ergoTree: string, // hex
     creationHeight: number,
     assets?: Array<{|
       tokenId: string, // hex
-      amount: number,
+      amount: number | string | BigNumberType,
     |}>,
     additionalRegisters: {| [key: string]: string /* hex */ |},
     transactionId?: string, // hex

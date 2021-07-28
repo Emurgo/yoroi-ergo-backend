@@ -3,6 +3,7 @@ const config = require('config');
 const fetch = require('node-fetch');
 const utils = require('./utils');
 const BigNumber = require('bignumber.js');
+const JSONBigInt = require('json-bigint');
 
 import type {
   UtxoForAddressesInput,
@@ -36,6 +37,9 @@ import type {
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
+
+const isNumberOrBigint = (x: *): boolean =>
+  (typeof x === 'number') || BigNumber.isBigNumber(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
@@ -72,7 +76,7 @@ const askInChainTransaction = async (
       `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
     );
     if (resp.status !== 200) return { errMsg: `error querying transactions for address` };
-    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
 
     const newAcc = [
       ...acc,
@@ -171,7 +175,7 @@ const askPendingTransaction = async (
   const unfilteredResponses: Array<getApiV0TransactionsUnconfirmedByaddressP1Item> = [];
   for (const response of pendingResponses) {
     if (response.status !== 200) return {kind:'error', errMsg: `error querying pending transactions for address`};
-    const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = await response.json();
+    const json: getApiV0TransactionsUnconfirmedByaddressP1SuccessResponse = JSONBigInt.parse(await response.text());
 
     for (const item of json.items) {
       if (seenTransactions.has(item.id)) continue;
@@ -320,21 +324,32 @@ const bestBlock: HandlerFunction = async function (_req, _res) {
   return { status: 200, body: output };
 };
 
-const signed: HandlerFunction = async function (req, _res) {
-  const body: postApiV0TransactionsSendRequest = req.body;
+function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
+  // Output value and asset amounts can be received as a number, string, or BigNumber
+  // So we convert any value to BigNumber to make sure we are sending only JSON-numbers to the explorer API
+  tx.outputs?.forEach(o => {
+    o.value = new BigNumber(o.value);
+    o.assets?.forEach(a => {
+      a.amount = new BigNumber(a.amount);
+    });
+  });
+}
 
+const signed: HandlerFunction = async function (req, _res) {
+  const body: postApiV0TransactionsSendRequest = JSONBigInt.parse(req.rawBody);
+  fixTxValuesToBigInt(body);
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/transactions/send`,
     {
       method: 'post',
-      body: JSON.stringify(body),
+      body: JSONBigInt.stringify(body),
     }
   )
 
   if (resp.status !== 200) {
     return { status: 400, body: `error sending transaction`};
   }
-  const r: postApiV0TransactionsSendSuccessResponse = await resp.json();
+  const r: postApiV0TransactionsSendSuccessResponse = JSONBigInt.parse(await resp.text());
   return { status: 200, body: r };
 };
 
@@ -344,7 +359,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
       `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
     );
     if (resp.status !== 200) return { errMsg: `error querying utxos for address` };
-    const r: getApiV0AddressesP1TransactionsSuccessResponse = await resp.json();
+    const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
 
     const newAcc = [
       ...acc,
@@ -387,7 +402,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
 
 
 const utxoForAddresses: HandlerFunction = async function (req, _res) {
-  const input: UtxoForAddressesInput = req.body;
+  const input: UtxoForAddressesInput = JSONBigInt.parse(req.rawBody);
   
   const outputsForAddresses: Array<UtilEither<UtxoForAddressesOutput>> = (await Promise.all(
     input.addresses.map(getUtxoForAddress)
@@ -408,8 +423,8 @@ async function getBalanceForAddress(address: string): Promise<UtilEither<number>
     `${config.backend.explorer}/api/v0/addresses/${address}`
   );
   if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
-  const r: getApiV0AddressesP1SuccessResponse = await resp.json();
-  if (r.transactions && typeof r.transactions.confirmedBalance === 'number') {
+  const r: getApiV0AddressesP1SuccessResponse = JSONBigInt.parse(await resp.text());
+  if (r.transactions && isNumberOrBigint(r.transactions.confirmedBalance)) {
     return {
       kind: 'ok',
       value: r.transactions.confirmedBalance,
@@ -422,7 +437,7 @@ async function getBalanceForAddress(address: string): Promise<UtilEither<number>
 }
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
-  const input: UtxoSumForAddressesInput = req.body;
+  const input: UtxoSumForAddressesInput = JSONBigInt.parse(req.rawBody);
   const balances = await Promise.all(
     input.addresses.map(getBalanceForAddress)
   );
@@ -455,8 +470,7 @@ async function isUsed(address: string): Promise<UtilEither<{| used: boolean, add
 }
 
 const filterUsed: HandlerFunction = async function (req, _res) {
-  const input: FilterUsedInput = req.body;
-  
+  const input: FilterUsedInput = JSONBigInt.parse(req.rawBody);
   const usedStatuses = await Promise.all(
     input.addresses.map(isUsed)
   );
@@ -480,7 +494,7 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
     return { kind: 'error', errMsg: `error getting tx body`};
   }
 
-  const txBody: getApiV0TransactionsP1SuccessResponse = await resp.json();
+  const txBody: getApiV0TransactionsP1SuccessResponse = JSONBigInt.parse(await resp.text());
   return {
     kind: 'ok',
     value: [ txHash, txBody ],
@@ -488,7 +502,7 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
 }
 
 const txBodies: HandlerFunction = async function (req, _res) {
-  const input: TxBodiesInput = req.body;
+  const input: TxBodiesInput = JSONBigInt.parse(req.rawBody);
 
   const txBodyEntries = await Promise.all(
     input.txHashes.map(getTxBody)
@@ -505,93 +519,90 @@ const txBodies: HandlerFunction = async function (req, _res) {
 }
 
 const history: HandlerFunction = async function (req, _res) {
-  const input: HistoryInput = req.body;
-
   if(!req.body) {
     const errMsg = "error, no body";
     return { status: 400, body: errMsg}
   }
+  const input: HistoryInput = JSONBigInt.parse(req.rawBody);
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
 
-  switch (verifiedBody.kind) {
-    case "ok": {
-      const body = verifiedBody.value;
-      const limit = apiResponseLimit;
-      const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
-      const referenceBestBlock = body.untilBlock;
-
-      const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
-      const untilBlockNum = await askBlockNum(referenceBestBlock);
-
-      if (afterBlockNum.kind === 'error') {
-        if (afterBlockNum.errMsg.includes('tx')) {
-          throw new Error("REFERENCE_TX_NOT_FOUND");
-        }
-        if (afterBlockNum.errMsg.includes('block')) {
-          throw new Error("REFERENCE_BLOCK_MISMATCH");
-        }
-        return { status: 400, body: afterBlockNum.errMsg}
-      }
-      if (untilBlockNum.kind === 'error') {
-        throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
-      }
-
-      const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
-      if (unformattedTxs.kind === 'error') {
-        return { status: 400, body: unformattedTxs.errMsg}
-      }
-
-      const txs: HistoryOutput = [];
-      // 1) first add the in-chain txs
-      for (const tx of unformattedTxs.value.inChain) {
-        const iso8601date = new Date(tx.timestamp).toISOString()
-        txs.push({
-          block_hash: tx.headerId,
-          block_num: tx.inclusionHeight,
-          tx_ordinal: tx.index,
-          epoch: 0, // TODO
-          slot: 0, // TODO
-
-          hash: tx.id,
-          time: iso8601date,
-          tx_state: 'Successful',
-          inputs: tx.inputs,
-          dataInputs: tx.dataInputs,
-          outputs: tx.outputs,
-        });
-      }
-      // 2) add the pending txs
-      for (const tx of unformattedTxs.value.pending) {
-        const iso8601date = new Date(tx.creationTimestamp).toISOString()
-        txs.push({
-          block_hash: null,
-          block_num: null,
-          tx_ordinal: null,
-          epoch: null,
-          slot: null,
-
-          hash: tx.id,
-          time: iso8601date,
-          tx_state: 'Pending',
-          inputs: tx.inputs,
-          dataInputs: tx.dataInputs,
-          outputs: tx.outputs.map(output => ({
-            ...output,
-          })),
-        });
-      }
-
-      return { status: 200, body: txs };
-    }
-    case "error": {
-      return { status: 400, body: verifiedBody.errMsg };
-    }
-    default: return utils.assertNever(verifiedBody);
+  if (verifiedBody.kind === 'error') {
+    return { status: 400, body: verifiedBody.errMsg };
   }
+  if (verifiedBody.kind !== 'ok') {
+    return utils.assertNever(verifiedBody);
+  }
+
+  const body = verifiedBody.value;
+  const limit = apiResponseLimit;
+  const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
+  const referenceBestBlock = body.untilBlock;
+
+  const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != null ? referenceTx : "");
+  const untilBlockNum = await askBlockNum(referenceBestBlock);
+
+  if (afterBlockNum.kind === 'error') {
+    if (afterBlockNum.errMsg.includes('tx')) {
+      throw new Error("REFERENCE_TX_NOT_FOUND");
+    }
+    if (afterBlockNum.errMsg.includes('block')) {
+      throw new Error("REFERENCE_BLOCK_MISMATCH");
+    }
+    return { status: 400, body: afterBlockNum.errMsg}
+  }
+  if (untilBlockNum.kind === 'error') {
+    throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
+  }
+
+  const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
+  if (unformattedTxs.kind === 'error') {
+    return { status: 400, body: unformattedTxs.errMsg}
+  }
+
+  const txs: HistoryOutput = [];
+  // 1) first add the in-chain txs
+  for (const tx of unformattedTxs.value.inChain) {
+    const iso8601date = new Date(tx.timestamp).toISOString()
+    txs.push({
+      block_hash: tx.headerId,
+      block_num: tx.inclusionHeight,
+      tx_ordinal: tx.index,
+      epoch: 0, // TODO
+      slot: 0, // TODO
+
+      hash: tx.id,
+      time: iso8601date,
+      tx_state: 'Successful',
+      inputs: tx.inputs,
+      dataInputs: tx.dataInputs,
+      outputs: tx.outputs,
+    });
+  }
+  // 2) add the pending txs
+  for (const tx of unformattedTxs.value.pending) {
+    const iso8601date = new Date(tx.creationTimestamp).toISOString()
+    txs.push({
+      block_hash: null,
+      block_num: null,
+      tx_ordinal: null,
+      epoch: null,
+      slot: null,
+
+      hash: tx.id,
+      time: iso8601date,
+      tx_state: 'Pending',
+      inputs: tx.inputs,
+      dataInputs: tx.dataInputs,
+      outputs: tx.outputs.map(output => ({
+        ...output,
+      })),
+    });
+  }
+  return { status: 200, body: txs };
 }
 
 const assetsInfo: HandlerFunction = async function (req, _res) {
-  const input: AssetInfoInput = req.body;
+  const input: AssetInfoInput = JSONBigInt.parse(req.rawBody);
 
   const assetResponses = await Promise.all(
     input.assetIds.map((asset) => askAssetInfo(asset))

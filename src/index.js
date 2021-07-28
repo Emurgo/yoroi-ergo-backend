@@ -3,6 +3,7 @@ const restify = require('restify');
 const config = require('config');
 const bunyan = require('bunyan');
 const corsMiddleware = require('restify-cors-middleware');
+const JSONBigInt = require('json-bigint');
 const api = require('./api');
 import type { HandlerDefinitions } from './types/utils';
 
@@ -44,7 +45,12 @@ function installHandlers(handlers: HandlerDefinitions) {
         // return int status === 0.
         if (status !== 0) {
           res.status(status);
-          res.json(body);
+          if (status === 200) {
+            res.header('content-type', 'application/json');
+            res.sendRaw(JSONBigInt.stringify(body));
+          } else {
+            res.json(body);
+          }
         }
       } catch (error) {
         req.log.error('handler error', error);
