@@ -402,7 +402,7 @@ async function getUtxoForAddress(address: string): Promise<UtilEither<UtxoForAdd
 
 
 const utxoForAddresses: HandlerFunction = async function (req, _res) {
-  const input: UtxoForAddressesInput = req.body;
+  const input: UtxoForAddressesInput = JSONBigInt.parse(req.rawBody);
   
   const outputsForAddresses: Array<UtilEither<UtxoForAddressesOutput>> = (await Promise.all(
     input.addresses.map(getUtxoForAddress)
@@ -437,7 +437,7 @@ async function getBalanceForAddress(address: string): Promise<UtilEither<number>
 }
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
-  const input: UtxoSumForAddressesInput = req.body;
+  const input: UtxoSumForAddressesInput = JSONBigInt.parse(req.rawBody);
   const balances = await Promise.all(
     input.addresses.map(getBalanceForAddress)
   );
@@ -470,7 +470,7 @@ async function isUsed(address: string): Promise<UtilEither<{| used: boolean, add
 }
 
 const filterUsed: HandlerFunction = async function (req, _res) {
-  const input: FilterUsedInput = req.body;
+  const input: FilterUsedInput = JSONBigInt.parse(req.rawBody);
   const usedStatuses = await Promise.all(
     input.addresses.map(isUsed)
   );
@@ -502,7 +502,7 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
 }
 
 const txBodies: HandlerFunction = async function (req, _res) {
-  const input: TxBodiesInput = req.body;
+  const input: TxBodiesInput = JSONBigInt.parse(req.rawBody);
 
   const txBodyEntries = await Promise.all(
     input.txHashes.map(getTxBody)
@@ -519,12 +519,11 @@ const txBodies: HandlerFunction = async function (req, _res) {
 }
 
 const history: HandlerFunction = async function (req, _res) {
-  const input: HistoryInput = req.body;
-
   if(!req.body) {
     const errMsg = "error, no body";
     return { status: 400, body: errMsg}
   }
+  const input: HistoryInput = JSONBigInt.parse(req.rawBody);
   const verifiedBody = utils.validateHistoryReq(addressesRequestLimit, apiResponseLimit, input);
 
   if (verifiedBody.kind === 'error') {
@@ -539,7 +538,7 @@ const history: HandlerFunction = async function (req, _res) {
   const [referenceTx, referenceBlock] = (body.after && [body.after.tx, body.after.block]) || [undefined, undefined];
   const referenceBestBlock = body.untilBlock;
 
-  const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != undefined ? referenceTx : "");
+  const afterBlockNum = await askBlockNum(referenceBlock, referenceTx != null ? referenceTx : "");
   const untilBlockNum = await askBlockNum(referenceBestBlock);
 
   if (afterBlockNum.kind === 'error') {
@@ -603,7 +602,7 @@ const history: HandlerFunction = async function (req, _res) {
 }
 
 const assetsInfo: HandlerFunction = async function (req, _res) {
-  const input: AssetInfoInput = req.body;
+  const input: AssetInfoInput = JSONBigInt.parse(req.rawBody);
 
   const assetResponses = await Promise.all(
     input.assetIds.map((asset) => askAssetInfo(asset))
