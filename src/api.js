@@ -470,8 +470,6 @@ async function isUsed(address: string): Promise<UtilEither<{| used: boolean, add
 }
 
 const filterUsed: HandlerFunction = async function (req, _res) {
-  console.log('>', req.rawBody);
-  console.log('>>>', req.body);
   const input: FilterUsedInput = req.body;
   const usedStatuses = await Promise.all(
     input.addresses.map(isUsed)
