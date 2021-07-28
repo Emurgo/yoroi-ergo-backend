@@ -325,6 +325,8 @@ const bestBlock: HandlerFunction = async function (_req, _res) {
 };
 
 function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
+  // Output value and asset amounts can be received as a number, string, or BigNumber
+  // So we convert any value to BigNumber to make sure we are sending only JSON-numbers to the explorer API
   tx.outputs?.forEach(o => {
     o.value = new BigNumber(o.value);
     o.assets?.forEach(a => {
@@ -334,7 +336,7 @@ function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
 }
 
 const signed: HandlerFunction = async function (req, _res) {
-  const body: postApiV0TransactionsSendRequest = req.body;
+  const body: postApiV0TransactionsSendRequest = JSONBigInt.parse(req.rawBody);
   fixTxValuesToBigInt(body);
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/transactions/send`,
@@ -468,8 +470,9 @@ async function isUsed(address: string): Promise<UtilEither<{| used: boolean, add
 }
 
 const filterUsed: HandlerFunction = async function (req, _res) {
+  console.log('>', req.rawBody);
+  console.log('>>>', req.body);
   const input: FilterUsedInput = req.body;
-  
   const usedStatuses = await Promise.all(
     input.addresses.map(isUsed)
   );
