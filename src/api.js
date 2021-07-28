@@ -324,14 +324,23 @@ const bestBlock: HandlerFunction = async function (_req, _res) {
   return { status: 200, body: output };
 };
 
+function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
+  tx.outputs.forEach(o => {
+    o.value = new BigNumber(o.value);
+    o.assets.forEach(a => {
+      a.amount = new BigNumber(a.amount);
+    });
+  });
+}
+
 const signed: HandlerFunction = async function (req, _res) {
   const body: postApiV0TransactionsSendRequest = req.body;
-
+  fixTxValuesToBigInt(body);
   const resp = await fetch(
     `${config.backend.explorer}/api/v0/transactions/send`,
     {
       method: 'post',
-      body: JSON.stringify(body),
+      body: JSONBigInt.stringify(body),
     }
   )
 

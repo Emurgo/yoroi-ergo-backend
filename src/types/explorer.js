@@ -305,12 +305,12 @@ export type postApiV0TransactionsSendRequest = {|
   |}>,
   outputs: Array<{|
     boxId?: string, // hex
-    value: number,
+    value: string,
     ergoTree: string, // hex
     creationHeight: number,
     assets?: Array<{|
       tokenId: string, // hex
-      amount: number,
+      amount: string,
     |}>,
     additionalRegisters: {| [key: string]: string /* hex */ |},
     transactionId?: string, // hex
