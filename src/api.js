@@ -327,10 +327,10 @@ const bestBlock: HandlerFunction = async function (_req, _res) {
 function fixTxValuesToBigInt(tx: postApiV0TransactionsSendRequest) {
   // Output value and asset amounts can be received as a number, string, or BigNumber
   // So we convert any value to BigNumber to make sure we are sending only JSON-numbers to the explorer API
-  if (tx.outputs !== undefined) {
+  if (tx.outputs != null) {
     tx.outputs.forEach(o => {
       o.value = new BigNumber(o.value);
-      if (o.assets !== undefined) {
+      if (o.assets != null) {
         o.assets.forEach(a => {
           a.amount = new BigNumber(a.amount);
         });
