@@ -28,6 +28,9 @@ jobs:
       - name: run flow
         run: |
           npm run flow
+      - name: run flow-remove-types
+        run: |
+          npm run _flow-remove-types
   lint:
     if: github.event.review && (github.event.review.state == 'approved' || contains(github.event.review.body, '/check'))
     runs-on: ubuntu-latest
