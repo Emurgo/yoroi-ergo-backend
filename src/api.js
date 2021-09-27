@@ -498,7 +498,14 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
 
   aggregate.tokensBalance = aggregateTokenBalances;
 
-  return { status: 200, body: aggregate };
+  return {
+    status: 200,
+    body: {
+      sum: aggregate.totalNanoErgs,
+      totalNanoErgs: aggregate.totalNanoErgs,
+      tokensBalance: aggregate.tokensBalance
+    }
+  };
 }
 
 async function isUsed(address: string): Promise<UtilEither<{| used: boolean, address: string |}>> {
