@@ -9,7 +9,6 @@ import type {
   UtxoForAddressesInput,
   UtxoForAddressesOutput,
   UtxoSumForAddressesInput,
-  UtxoSumForAddressesOutput,
   FilterUsedInput,
   FilterUsedOutput,
   TxBodiesInput,
@@ -39,9 +38,6 @@ import type {
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 50;
-
-const isNumberOrBigint = (x: *): boolean =>
-  (typeof x === 'number') || BigNumber.isBigNumber(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
