@@ -453,23 +453,6 @@ async function getBalanceForAddress(address: string): Promise<UtilEither<Address
       }
     }
   }
-  
-
-  // const resp = await fetch(
-  //   `${config.backend.explorer}/api/v0/addresses/${address}`
-  // );
-  // if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
-  // const r: getApiV0AddressesP1SuccessResponse = JSONBigInt.parse(await resp.text());
-  // if (r.transactions && isNumberOrBigint(r.transactions.confirmedBalance)) {
-  //   return {
-  //     kind: 'ok',
-  //     value: r.transactions.confirmedBalance,
-  //   };
-  // }
-  // return {
-  //   kind: 'ok',
-  //   value: 0,
-  // };
 }
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
