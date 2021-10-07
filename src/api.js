@@ -461,9 +461,9 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
     input.addresses.map(getBalanceForAddress)
   );
 
-  let aggregate: AddressBalanceResponse = {}
+  let totalNanoErgs = BigNumber(0);
   let aggregateTokenBalances: Array<{
-    tokenId: string,
+    assetId: string,
     amount: string,
     decimals: number,
     name: string
@@ -474,15 +474,14 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
       return {status: 400, body: balance.errMsg};
     }
 
-    const currNanoErgs = BigNumber(aggregate.totalNanoErgs || 0);
     const addNanoErgs = BigNumber(balance.value.totalNanoErgs || 0);
-    aggregate.totalNanoErgs = currNanoErgs.plus(addNanoErgs).toString();
+    totalNanoErgs = totalNanoErgs.plus(addNanoErgs);
     
     for (const tokenBalance of balance.value.tokensBalance) {
-      const existingTokenBalance = aggregateTokenBalances.find(t => t.tokenId === tokenBalance.tokenId);
+      const existingTokenBalance = aggregateTokenBalances.find(t => t.assetId === tokenBalance.tokenId);
       if (!existingTokenBalance) {
         aggregateTokenBalances.push({
-          tokenId: tokenBalance.tokenId,
+          assetId: tokenBalance.tokenId,
           amount: tokenBalance.amount,
           decimals: tokenBalance.decimals,
           name: tokenBalance.name
@@ -496,14 +495,11 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
     }
   }
 
-  aggregate.tokensBalance = aggregateTokenBalances;
-
   return {
     status: 200,
     body: {
-      sum: aggregate.totalNanoErgs,
-      totalNanoErgs: aggregate.totalNanoErgs,
-      tokensBalance: aggregate.tokensBalance
+      sum: totalNanoErgs.toString(),
+      tokensBalance: aggregateTokenBalances
     }
   };
 }

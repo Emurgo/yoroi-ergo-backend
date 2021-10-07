@@ -51,14 +51,13 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
     addresses: Array<string>,
   }
   ```
-  Output (note that `sum` and `totalNanoErgs` returns the **same value**. `sum` is a legacy property included in this response for backwards compatibility, but any new systems using this API should be using `totalNanoErgs` instead of `sum`):
+  Output:
   ```
   {
     sum: string,
-    totalNanoErgs: string,
     tokensBalance: [
-      tokenId: string,
-      amount: number,
+      assetId: string,
+      amount: string,
       decimals: number,
       name: string
     ]
