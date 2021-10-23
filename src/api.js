@@ -36,7 +36,7 @@ import type {
 } from './types/explorer';
 
 const addressesRequestLimit = 50;
-const apiResponseLimit = 50;
+const apiResponseLimit = 20;
 
 const isNumberOrBigint = (x: *): boolean =>
   (typeof x === 'number') || BigNumber.isBigNumber(x);
