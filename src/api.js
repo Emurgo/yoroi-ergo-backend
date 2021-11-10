@@ -37,7 +37,7 @@ import type {
 } from './types/explorer';
 
 const addressesRequestLimit = 50;
-const apiResponseLimit = 50;
+const apiResponseLimit = 20;
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
