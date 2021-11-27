@@ -218,10 +218,10 @@ const specs: Array<Spec> = [
     endpoint: '/api/v2/txs/history',
     input: {
       addresses: ['9hK1EHKmPPQu4YJrZDjQ2E5sYZxkHFGvU5kVTcxTxojgP28tWzC'],
-      untilBlock: '384063aaff58ae1e4d1914a9562c806572f9911907565ad6eee3f73653dec8d5',
+      untilBlock: '008a03ddb289aea660f69165245b1448a3fb16dfc7b04061489a77f8911b6572',
     },
     output: (output) => {
-      expect(output.length).toBe(34);
+      expect(output.length).toBe(16);
     }
   },
 
