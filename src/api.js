@@ -577,9 +577,9 @@ const history: HandlerFunction = async function (req, _res) {
       hash: tx.id,
       time: iso8601date,
       tx_state: 'Successful',
-      inputs: tx.inputs,
-      dataInputs: tx.dataInputs,
-      outputs: tx.outputs,
+      inputs: input.omitUtxo ? undefined : tx.inputs,
+      dataInputs: input.omitUtxo ? undefined : tx.dataInputs,
+      outputs: input.omitUtxo ? undefined : tx.outputs,
     });
   }
   // 2) add the pending txs
@@ -595,9 +595,9 @@ const history: HandlerFunction = async function (req, _res) {
       hash: tx.id,
       time: iso8601date,
       tx_state: 'Pending',
-      inputs: tx.inputs,
-      dataInputs: tx.dataInputs,
-      outputs: tx.outputs.map(output => ({
+      inputs: input.omitUtxo ? undefined : tx.inputs,
+      dataInputs: input.omitUtxo ? undefined : tx.dataInputs,
+      outputs: input.omitUtxo ? undefined : tx.outputs.map(output => ({
         ...output,
       })),
     });

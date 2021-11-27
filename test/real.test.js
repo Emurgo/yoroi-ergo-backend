@@ -218,10 +218,35 @@ const specs: Array<Spec> = [
     endpoint: '/api/v2/txs/history',
     input: {
       addresses: ['9hK1EHKmPPQu4YJrZDjQ2E5sYZxkHFGvU5kVTcxTxojgP28tWzC'],
-      untilBlock: '384063aaff58ae1e4d1914a9562c806572f9911907565ad6eee3f73653dec8d5',
+      untilBlock: '008a03ddb289aea660f69165245b1448a3fb16dfc7b04061489a77f8911b6572',
     },
     output: (output) => {
-      expect(output.length).toBe(34);
+      expect(output.length).toBe(16);
+
+      // makes sure all utxos are being included by default
+      for (let o of output) {
+        expect(o.inputs).not.toBe(undefined); 
+        expect(o.dataInputs).not.toBe(undefined); 
+        expect(o.outputs).not.toBe(undefined); 
+      }
+    }
+  },
+  
+  {
+    name: 'history',
+    method: 'post',
+    endpoint: '/api/v2/txs/history',
+    input: {
+      addresses: ['9hK1EHKmPPQu4YJrZDjQ2E5sYZxkHFGvU5kVTcxTxojgP28tWzC'],
+      untilBlock: '008a03ddb289aea660f69165245b1448a3fb16dfc7b04061489a77f8911b6572',
+      omitUtxo: true,
+    },
+    output: (output) => {
+      for (let o of output) {
+        expect(o.inputs).toBe(undefined); 
+        expect(o.dataInputs).toBe(undefined); 
+        expect(o.outputs).toBe(undefined); 
+      }
     }
   },
 
@@ -234,7 +259,7 @@ const specs: Array<Spec> = [
       untilBlock: '5aa15b0eb56ca3c4feab2fc99c53eef6f7fbf4beefa8a0e1bc76e7bd72118a0a',
     },
     output: (output) => {
-      expect(output.length).toBe(50);
+      expect(output.length).toBe(20);
     }
   },
 

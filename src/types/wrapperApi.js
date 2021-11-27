@@ -37,6 +37,7 @@ export type HistoryInput = {|
     tx: string, // tx hash
   |},
   untilBlock: string, // block hash - inclusive
+  omitUtxo?: boolean // setting this to true means the response will not include inputs, dataInputs nor outputs
 |};
 export type HistoryOutput = Array<{
   block_hash: null | string,
@@ -48,7 +49,7 @@ export type HistoryOutput = Array<{
   hash: string,
   time: string,
   tx_state: 'Successful' | 'Pending', // explorer doesn't handle failed transactions
-  inputs: $ReadOnlyArray<$ReadOnly<{
+  inputs?: $ReadOnlyArray<$ReadOnly<{
     // these will be ordered by the input transaction id asc
     address: string,
     id: string,
@@ -64,7 +65,7 @@ export type HistoryOutput = Array<{
     value: number,
     ...,
   }>>,
-  dataInputs: $ReadOnlyArray<$ReadOnly<{
+  dataInputs?: $ReadOnlyArray<$ReadOnly<{
     // these will be ordered by the input transaction id asc
     id: string,
     value: number,
@@ -74,7 +75,7 @@ export type HistoryOutput = Array<{
     address: string,
     ...,
   }>>,
-  +outputs: $ReadOnlyArray<$ReadOnly<{
+  +outputs?: $ReadOnlyArray<$ReadOnly<{
     // these will be ordered by the output transaction id asc
     additionalRegisters: $ReadOnly<{ ... }>,
     address: string,
