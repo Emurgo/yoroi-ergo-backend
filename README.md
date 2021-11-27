@@ -100,6 +100,7 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
       tx: string, // tx hash
     |},
     untilBlock: string, // block hash - inclusive
+    omitUtxo?: boolean // setting this to true means the response will not include inputs, dataInputs nor outputs
   }
   ```
   Output:
