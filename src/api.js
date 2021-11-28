@@ -507,10 +507,13 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
   };
 }
 
-async function getTxBodies(txHashes: Array<string>, reduced: boolean = false): Promise<UtilEither<{| [key: string]: {} |}>> {
+async function getTxBodies(
+  txHashes: Array<string>, 
+  reduced: boolean = false
+): Promise<UtilEither<{ [key: string]: getApiV0TransactionsP1SuccessResponse | BoxesForTransactionsOutput }>> {
   const txBodyEntries = await Promise.all(txHashes.map(getTxBody));
 
-  const result: {| [key: string]: getApiV0TransactionsP1SuccessResponse |} = {};
+  const result: { [key: string]: {} } = {};
   for (const entry of txBodyEntries) {
     if (entry.kind === 'error') {
       return entry;
@@ -547,7 +550,7 @@ const txBodies: HandlerFunction = async function (req, _res) {
 const txBoxes: HandlerFunction = async function (req, _res) {
   const input: TxBodiesInput = JSONBigInt.parse(req.rawBody);
   
-  const result: BoxesForTransactionsOutput = await getTxBodies(input.txHashes, true);
+  const result = await getTxBodies(input.txHashes, true);
   if (result.kind === 'error') {
     return { status: 400, body: result.errMsg };
   }

@@ -106,12 +106,12 @@ export type BoxesForTransactionsInput = {|
   txHashes: Array<string>,
 |};
 
-export type BoxesForTransactionsOutput = {| [key: string]: {
-  inputs?: $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
-  dataInputs?: $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
-  outputs?: $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
+export type BoxesForTransactionsOutput = { [key: string]: {
+  inputs: $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
+  dataInputs: $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
+  outputs: $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
   } 
-|}
+}
 
 export type StatusOutput = {|
   isServerOk: boolean

@@ -99,7 +99,7 @@ const specs: Array<Spec> = [
     method: 'post',
     endpoint: '/api/v2/txs/boxes',
     input: { txHashes: ['c8df2f2d0dca51ab9a375ad9c77322cc11ebd7f3ba088168797e06371a573818', 'c3f4930a770fca607177967684931b45b46e8bc35b3d1466c48feb927561a8ba'] },
-    output: (output: BoxesForTransactionsOutput) => {
+    output: (output) => {
       expect(output).toEqual(EXPECTED_TX_BOXES);
     },
   },
