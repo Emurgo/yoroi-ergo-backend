@@ -39,7 +39,6 @@ import type {
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 20;
-const apiTransactionsBoxesLimit = 20;
 
 const isNumberOrBigint = (x: *): boolean =>
   (typeof x === 'number') || BigNumber.isBigNumber(x);
@@ -611,9 +610,9 @@ const history: HandlerFunction = async function (req, _res) {
       hash: tx.id,
       time: iso8601date,
       tx_state: 'Successful',
-      inputs: input.omitUtxo ? undefined : tx.inputs,
-      dataInputs: input.omitUtxo ? undefined : tx.dataInputs,
-      outputs: input.omitUtxo ? undefined : tx.outputs,
+      inputs: input.omitBoxes ? undefined : tx.inputs,
+      dataInputs: input.omitBoxes ? undefined : tx.dataInputs,
+      outputs: input.omitBoxes ? undefined : tx.outputs,
     });
   }
   // 2) add the pending txs
@@ -629,9 +628,9 @@ const history: HandlerFunction = async function (req, _res) {
       hash: tx.id,
       time: iso8601date,
       tx_state: 'Pending',
-      inputs: input.omitUtxo ? undefined : tx.inputs,
-      dataInputs: input.omitUtxo ? undefined : tx.dataInputs,
-      outputs: input.omitUtxo ? undefined : tx.outputs.map(output => ({
+      inputs: input.omitBoxes ? undefined : tx.inputs,
+      dataInputs: input.omitBoxes ? undefined : tx.dataInputs,
+      outputs: input.omitBoxes ? undefined : tx.outputs.map(output => ({
         ...output,
       })),
     });
