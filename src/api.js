@@ -14,6 +14,8 @@ import type {
   FilterUsedOutput,
   TxBodiesInput,
   HistoryInput, HistoryOutput,
+  BoxesForTransactionsInput,
+  BoxesForTransactionsOutput,
   StatusOutput,
   AssetInfoInput, AssetInfoOut, AssetInfo,
 } from './types/wrapperApi';
@@ -37,6 +39,7 @@ import type {
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 20;
+const apiTransactionsBoxesLimit = 20;
 
 const isNumberOrBigint = (x: *): boolean =>
   (typeof x === 'number') || BigNumber.isBigNumber(x);
@@ -505,21 +508,52 @@ async function getTxBody(txHash: string): Promise<UtilEither<[string, getApiV0Tr
   };
 }
 
-const txBodies: HandlerFunction = async function (req, _res) {
-  const input: TxBodiesInput = JSONBigInt.parse(req.rawBody);
+async function getTxBodies(txHashes: Array<string>, reduced: boolean = false): Promise<UtilEither<{| [key: string]: {} |}>> {
+  const txBodyEntries = await Promise.all(txHashes.map(getTxBody));
 
-  const txBodyEntries = await Promise.all(
-    input.txHashes.map(getTxBody)
-  );
   const result: {| [key: string]: getApiV0TransactionsP1SuccessResponse |} = {};
   for (const entry of txBodyEntries) {
     if (entry.kind === 'error') {
-      return {status: 400, body: entry.errMsg};
+      return entry;
     }
-    result[entry.value[0]] = entry.value[1];
+
+    if (reduced) {
+      result[entry.value[0]] = { 
+        inputs: entry.value[1].inputs,
+        dataInputs: entry.value[1].dataInputs,
+        outputs: entry.value[1].outputs,
+      };
+    } else {
+      result[entry.value[0]] = entry.value[1];
+    }
   }
 
-  return { status: 200, body: result };
+  return {
+    kind: 'ok',
+    value: result
+  };
+}
+
+const txBodies: HandlerFunction = async function (req, _res) {
+  const input: BoxesForTransactionsInput = JSONBigInt.parse(req.rawBody);
+  
+  const result = await getTxBodies(input.txHashes);
+  if (result.kind === 'error') {
+    return { status: 400, body: result.errMsg };
+  }
+
+  return { status: 200, body: result.value };
+}
+
+const txBoxes: HandlerFunction = async function (req, _res) {
+  const input: TxBodiesInput = JSONBigInt.parse(req.rawBody);
+  
+  const result: BoxesForTransactionsOutput = await getTxBodies(input.txHashes, true);
+  if (result.kind === 'error') {
+    return { status: 400, body: result.errMsg };
+  }
+
+  return { status: 200, body: result.value };
 }
 
 const history: HandlerFunction = async function (req, _res) {
@@ -638,6 +672,7 @@ exports.handlers = [
   { method: 'post', url: '/api/txs/utxoSumForAddresses', handler: utxoSumForAddresses },
   { method: 'post', url: '/api/v2/addresses/filterUsed', handler: filterUsed },
   { method: 'post', url: '/api/v2/txs/history', handler: history },
+  { method: 'post', url: '/api/v2/txs/boxes', handler: txBoxes },
   { method: 'post', url: '/api/assets/info', handler: assetsInfo },
   { method: 'get', url: '/api/v2/bestblock', handler: bestBlock },
   { method: 'post', url: '/api/txs/signed', handler: signed },
