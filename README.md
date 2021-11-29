@@ -165,6 +165,69 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
 </details>
 
 <details>
+  <summary>api/v2/txs/boxes</summary>
+
+  Input:
+  ```
+  {
+    txHashes: Array<string>,
+  }
+  ```
+  Output:
+  ```
+  {
+    [txHash: string]: {
+      inputs: Array<{
+        // these will be ordered by the input transaction id asc
+        address: string,
+        id: string,
+        outputTransactionId: string,
+        index: number,
+        outputIndex: number, // index in tx that created the output we're consuming
+        spendingProof: string | {
+          proofBytes: null | string,
+          extension: {...},
+          ...,
+        },
+        transactionId: string,
+        value: number,
+        ...,
+      }>,
+      dataInputs: Array<{
+        // these will be ordered by the input transaction id asc
+        id: string,
+        value: number,
+        transactionId: string,
+        outputIndex: number,
+        outputTransactionId: string,
+        address: string,
+        ...,
+      }>,
+      outputs: Array<{
+        // these will be ordered by the output transaction id asc
+        additionalRegisters: { ... },
+        address: string,
+        assets: Array<{
+          +amount: number,
+          +tokenId: string,
+          ...
+        }>,
+        creationHeight: number,
+        ergoTree: string,
+        id: string,
+        txId: string,
+        index: number,
+        mainChain?: boolean,
+        spentTransactionId?: null | string,
+        value: number,
+        ...
+      }>,
+    } 
+  }
+  ```
+</details>
+
+<details>
   <summary>api/v2/bestblock</summary>
 
   Input:
