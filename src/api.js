@@ -76,7 +76,7 @@ const askInChainTransaction = async (
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0AddressesP1TransactionsItem>>> => {
   const pagination = async (addr, acc, limit, offset) => {
     const resp = await fetch(
-      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}&concise=${concise}`
+      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}&concise=${concise ? 'true' : 'false'}`
     );
     if (resp.status !== 200) return { errMsg: `error querying transactions for address` };
     const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
