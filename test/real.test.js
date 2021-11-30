@@ -42,20 +42,20 @@ const specs: Array<Spec> = [
     method: 'post',
     endpoint: '/api/txs/utxoSumForAddresses',
     input: { addresses: [] },
-    output: { sum: '0' },
+    output: { sum: '0', tokensBalance: [] },
   },
   {
     name: 'zero utxoSumForAddresses',
     method: 'post',
     endpoint: '/api/txs/utxoSumForAddresses',
     input: { addresses: ['9fzq1eba7sbiVYwtAV3GNufZEveKQsBPReX8Tmb9jtXjRJkttB7', '9ekxEAKApantTt1S6QTzAi9nypppCE2ovzT6ktVuCUvArdStYWC'] },
-    output: { sum: '0' },
+    output: { sum: '0', tokensBalance: [] },
   },
   {
     method: 'post',
     endpoint: '/api/txs/utxoSumForAddresses',
     input: { addresses: ['9fzq1eba7sbiVYwtAV3GNufZEveKQsBPReX8Tmb9jtXjRJkttB7', '9gEcxPe4ztVEhk97tU9iU632juQxMwfht4kZ37xbWF2tdLqpcDk'] },
-    output: { sum: '100000000' },
+    output: { sum: '100000000', tokensBalance: [] },
   },
 
   {
