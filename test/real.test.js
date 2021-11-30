@@ -249,7 +249,7 @@ const specs: Array<Spec> = [
     input: {
       addresses: ['9hK1EHKmPPQu4YJrZDjQ2E5sYZxkHFGvU5kVTcxTxojgP28tWzC'],
       untilBlock: '008a03ddb289aea660f69165245b1448a3fb16dfc7b04061489a77f8911b6572',
-      omitBoxes: true,
+      concise: true,
     },
     output: (output) => {
       for (let o of output) {

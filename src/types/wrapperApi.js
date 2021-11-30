@@ -37,7 +37,7 @@ export type HistoryInput = {|
     tx: string, // tx hash
   |},
   untilBlock: string, // block hash - inclusive
-  omitBoxes?: boolean // setting this to true means the response will not include inputs, dataInputs nor outputs
+  concise?: boolean // setting this to true means the response will not include inputs, dataInputs nor outputs
 |};
 export type HistoryOutput = Array<{
   block_hash: null | string,
