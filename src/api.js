@@ -68,14 +68,15 @@ const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEit
 
 const askInChainTransaction = async (
   limit: number
-    , addresses: string[]
-    , afterNum: number
-    , afterTxHash: ?string
-    , untilNum: number
+  , addresses: string[]
+  , afterNum: number
+  , afterTxHash: ?string
+  , untilNum: number
+  , concise: boolean
 ): Promise<UtilEither<$ReadOnlyArray<getApiV0AddressesP1TransactionsItem>>> => {
   const pagination = async (addr, acc, limit, offset) => {
     const resp = await fetch(
-      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}`
+      `${config.backend.explorer}/api/v0/addresses/${addr}/transactions?limit=${limit}&offset=${offset}&concise=${concise}`
     );
     if (resp.status !== 200) return { errMsg: `error querying transactions for address` };
     const r: getApiV0AddressesP1TransactionsSuccessResponse = JSONBigInt.parse(await resp.text());
@@ -263,6 +264,7 @@ const askTransactionHistory = async (
     , afterNum: number
     , afterTxHash: ?string
     , untilNum: number
+    , concise: boolean = false
   ): Promise<UtilEither<{|
     inChain: $ReadOnlyArray<getApiV0AddressesP1TransactionsItem>,
     pending: $ReadOnlyArray<getApiV0TransactionsUnconfirmedByaddressP1Item>,
@@ -273,7 +275,8 @@ const askTransactionHistory = async (
     addresses,
     afterNum,
     afterTxHash,
-    untilNum
+    untilNum,
+    concise
   );
   if (inChain.kind === 'error') {
     return inChain;
@@ -594,7 +597,15 @@ const history: HandlerFunction = async function (req, _res) {
     throw new Error("REFERENCE_BEST_BLOCK_MISMATCH");
   }
 
-  const unformattedTxs = await askTransactionHistory(limit, body.addresses, afterBlockNum.value, referenceTx, untilBlockNum.value);
+  const unformattedTxs = await askTransactionHistory(
+    limit, 
+    body.addresses, 
+    afterBlockNum.value, 
+    referenceTx, 
+    untilBlockNum.value,
+    input.omitBoxes
+  );
+
   if (unformattedTxs.kind === 'error') {
     return { status: 400, body: unformattedTxs.errMsg}
   }
