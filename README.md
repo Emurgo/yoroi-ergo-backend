@@ -55,6 +55,12 @@ This is a wrapper for the [Ergo explorer API](https://explorer.ergoplatform.com/
   ```
   {
     sum: string,
+    tokensBalance: [
+      assetId: string,
+      amount: string,
+      decimals: number,
+      name: string
+    ]
   }
   ```
 </details>

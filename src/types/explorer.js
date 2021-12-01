@@ -291,6 +291,23 @@ export type getApiV0InfoSuccessResponse = {
 };
 export type getApiV0InfoResponse = getApiV0InfoSuccessResponse | FailResponse;
 
+export type getApiV1AddressesP1BalanceTotalResponse = {
+  confirmed: getApiV1AddressesP1BalanceTotalResponseItem,
+  unconfirmed: getApiV1AddressesP1BalanceTotalResponseItem
+}
+
+type getApiV1AddressesP1BalanceTotalResponseItem = {
+  nanoErgs: string,
+  tokens: $ReadOnlyArray<getApiV1AddressesP1BalanceTotalResponseItemToken>
+}
+
+type getApiV1AddressesP1BalanceTotalResponseItemToken = {
+  tokenId: string,
+  amount: string,
+  decimals: number,
+  name: string
+}
+
 // taken from the node API's swagger definition
 export type postApiV0TransactionsSendRequest = {|
   id?: string, // hex
