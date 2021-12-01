@@ -9,13 +9,13 @@ import type {
   UtxoForAddressesInput,
   UtxoForAddressesOutput,
   UtxoSumForAddressesInput,
-  UtxoSumForAddressesOutput,
   FilterUsedInput,
   FilterUsedOutput,
   TxBodiesInput,
   HistoryInput, HistoryOutput,
   StatusOutput,
   AssetInfoInput, AssetInfoOut, AssetInfo,
+  AddressBalanceResponse
 } from './types/wrapperApi';
 import type {
   HandlerFunction,
@@ -33,13 +33,11 @@ import type {
   getApiV0TransactionsP1SuccessResponse,
   getApiV0AddressesP1SuccessResponse,
   getApiV0AssetsP1IssuingboxSuccessResponse,
+  getApiV1AddressesP1BalanceTotalResponse
 } from './types/explorer';
 
 const addressesRequestLimit = 50;
 const apiResponseLimit = 20;
-
-const isNumberOrBigint = (x: *): boolean =>
-  (typeof x === 'number') || BigNumber.isBigNumber(x);
 
 const askBlockNum = async (blockHash: ?string, txHash?: string): Promise<UtilEither<number>> => {
   if (blockHash == undefined) return {kind:'ok', value: -1};
@@ -422,22 +420,39 @@ const utxoForAddresses: HandlerFunction = async function (req, _res) {
   return { status: 200, body: result };
 }
 
-async function getBalanceForAddress(address: string): Promise<UtilEither<number>> {
+async function getBalanceForAddress(address: string): Promise<UtilEither<AddressBalanceResponse>> {
   const resp = await fetch(
-    `${config.backend.explorer}/api/v0/addresses/${address}`
+    `${config.backend.explorer}/api/v1/addresses/${address}/balance/total`
   );
-  if (resp.status !== 200) return {kind:'error', errMsg: `error querying utxos for address`};
-  const r: getApiV0AddressesP1SuccessResponse = JSONBigInt.parse(await resp.text());
-  if (r.transactions && isNumberOrBigint(r.transactions.confirmedBalance)) {
+
+  if (resp.status !== 200) return {kind:'error', errMsg: `error querying total balance for address`};
+  const r: getApiV1AddressesP1BalanceTotalResponse = JSONBigInt.parse(await resp.text());
+
+  if (r.confirmed) {
     return {
       kind: 'ok',
-      value: r.transactions.confirmedBalance,
-    };
+      value: {
+        totalNanoErgs: r.confirmed.nanoErgs,
+        tokensBalance: r.confirmed.tokens
+          .map(t => {
+            return {
+              tokenId: t.tokenId,
+              amount: t.amount,
+              decimals: t.decimals,
+              name: t.name
+            }
+          })
+      }
+    }
+  } else {
+    return {
+      kind: 'ok',
+      value: {
+        totalNanoErgs: '0',
+        tokensBalance: []
+      }
+    }
   }
-  return {
-    kind: 'ok',
-    value: 0,
-  };
 }
 
 const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
@@ -446,15 +461,47 @@ const utxoSumForAddresses: HandlerFunction = async function (req, _res) {
     input.addresses.map(getBalanceForAddress)
   );
 
-  let sum = new BigNumber(0);
+  let totalNanoErgs = BigNumber(0);
+  let aggregateTokenBalances: Array<{
+    assetId: string,
+    amount: string,
+    decimals: number,
+    name: string
+  }> = []
+
   for (const balance of balances) {
     if (balance.kind === 'error') {
       return {status: 400, body: balance.errMsg};
     }
-    sum = sum.plus(balance.value);
+
+    const addNanoErgs = BigNumber(balance.value.totalNanoErgs || 0);
+    totalNanoErgs = totalNanoErgs.plus(addNanoErgs);
+    
+    for (const tokenBalance of balance.value.tokensBalance) {
+      const existingTokenBalance = aggregateTokenBalances.find(t => t.assetId === tokenBalance.tokenId);
+      if (!existingTokenBalance) {
+        aggregateTokenBalances.push({
+          assetId: tokenBalance.tokenId,
+          amount: tokenBalance.amount,
+          decimals: tokenBalance.decimals,
+          name: tokenBalance.name
+        })
+      } else {
+        const currTokenBalance = BigNumber(existingTokenBalance.amount || 0);
+        const addTokenBalance = BigNumber(tokenBalance.amount || 0);
+
+        existingTokenBalance.amount = currTokenBalance.plus(addTokenBalance).toString();
+      }
+    }
   }
-  const output: UtxoSumForAddressesOutput = { sum: sum.toString() };
-  return { status: 200, body: output };
+
+  return {
+    status: 200,
+    body: {
+      sum: totalNanoErgs.toString(),
+      tokensBalance: aggregateTokenBalances
+    }
+  };
 }
 
 async function isUsed(address: string): Promise<UtilEither<{| used: boolean, address: string |}>> {

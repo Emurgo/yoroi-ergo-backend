@@ -113,3 +113,13 @@ export type AssetInfo = {|
 export type AssetInfoOut = {|
   [assetId: string]: AssetInfo
 |};
+
+export type AddressBalanceResponse = {
+  totalNanoErgs: string,
+  tokensBalance: $ReadOnlyArray<{
+    tokenId: string,
+    amount: string,
+    decimals: number,
+    name: string
+  }>
+}
