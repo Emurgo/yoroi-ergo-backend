@@ -253,9 +253,9 @@ const specs: Array<Spec> = [
     },
     output: (output) => {
       for (let o of output) {
-        expect(o.inputs).toBe(undefined); 
-        expect(o.dataInputs).toBe(undefined); 
-        expect(o.outputs).toBe(undefined); 
+        expect(o.inputs).toBe(null); 
+        expect(o.dataInputs).toBe(null); 
+        expect(o.outputs).toBe(null); 
       }
     }
   },

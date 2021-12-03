@@ -49,9 +49,9 @@ export type HistoryOutput = Array<{
   hash: string,
   time: string,
   tx_state: 'Successful' | 'Pending', // explorer doesn't handle failed transactions
-  inputs?: $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
-  dataInputs?: $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
-  +outputs?: $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
+  inputs: null | $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
+  dataInputs: null | $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
+  outputs: null | $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
 }>;
 
 export type TransactionInputBox = {
