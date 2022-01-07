@@ -238,6 +238,23 @@ const specs: Array<Spec> = [
     }
   },
 
+    {
+    name: 'history: reference and first tx in the same block',
+    method: 'post',
+    endpoint: '/api/v2/txs/history',
+    input: {
+      after: {
+        block: "c55c3d9c802ee02ac56982587ba42ea9da0ab545913eae94001b33986461b4ff",
+        tx: "bb6dc22ac44ecafa27ef9fb6b0c8379077355ad72e1661aa34fc5ce43c95fbbb"
+      },
+      addresses: ['9f5SeYwRHj7T2ECzfozEZY5MRtSD3Dp6RHK1F2Sz1riCFnQky18'],
+      untilBlock: '88f457258703c86b58ebf1255d95bc9ea471c7fb37352b5a7ce52b9ae59fda72',
+    },
+    output: (output) => {
+      expect(output[0].hash).toBe("06b2cd455a1d9d08c3a9edb8607a1bfcb28da89c44b71515f4d2f880ca7115bd");
+    }
+  },
+
   {
     method: 'get',
     endpoint: '/api/status',

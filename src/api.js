@@ -112,13 +112,21 @@ const askInChainTransaction = async (
     value: [],
   };
 
+  const afterTxHashIndex = unfilteredResponses.find(x => x.id === afterTxHash)?.index;
   let output: Array<getApiV0AddressesP1TransactionsItem> = [];
 
   // 1) Cutoff by block
   for(const response of unfilteredResponses) {
     // filter by limit after and until
     const creationHeight = response.inclusionHeight;
-    if (creationHeight <= afterNum) {
+
+    if (
+      creationHeight === afterNum &&
+      (!afterTxHashIndex || response.id === afterTxHash || response.index < afterTxHashIndex)
+      ) {
+        continue;
+    }
+    if (creationHeight < afterNum) {
       continue;
     }
     if (creationHeight > untilNum) {
