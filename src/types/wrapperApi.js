@@ -37,6 +37,7 @@ export type HistoryInput = {|
     tx: string, // tx hash
   |},
   untilBlock: string, // block hash - inclusive
+  concise?: boolean // setting this to true means the response will not include inputs, dataInputs nor outputs
 |};
 export type HistoryOutput = Array<{
   block_hash: null | string,
@@ -48,52 +49,69 @@ export type HistoryOutput = Array<{
   hash: string,
   time: string,
   tx_state: 'Successful' | 'Pending', // explorer doesn't handle failed transactions
-  inputs: $ReadOnlyArray<$ReadOnly<{
-    // these will be ordered by the input transaction id asc
-    address: string,
-    id: string,
-    outputTransactionId: string,
-    index: number,
-    outputIndex: number, // index in tx that created the output we're consuming
-    spendingProof: string | $ReadOnly<{
-      proofBytes: null | string,
-      extension: $ReadOnly<{...}>,
-      ...,
-    }>,
-    transactionId: string,
-    value: number,
+  inputs: null | $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
+  dataInputs: null | $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
+  outputs: null | $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
+}>;
+
+export type TransactionInputBox = {
+  // these will be ordered by the input transaction id asc
+  address: string,
+  id: string,
+  outputTransactionId: string,
+  index: number,
+  outputIndex: number, // index in tx that created the output we're consuming
+  spendingProof: string | $ReadOnly<{
+    proofBytes: null | string,
+    extension: $ReadOnly<{...}>,
     ...,
-  }>>,
-  dataInputs: $ReadOnlyArray<$ReadOnly<{
-    // these will be ordered by the input transaction id asc
-    id: string,
-    value: number,
-    transactionId: string,
-    outputIndex: number,
-    outputTransactionId: string,
-    address: string,
-    ...,
-  }>>,
-  +outputs: $ReadOnlyArray<$ReadOnly<{
-    // these will be ordered by the output transaction id asc
-    additionalRegisters: $ReadOnly<{ ... }>,
-    address: string,
-    assets: $ReadOnlyArray<$ReadOnly<{
-      +amount: number,
-      +tokenId: string,
-      ...
-    }>>,
-    creationHeight: number,
-    ergoTree: string,
-    id: string,
-    txId: string,
-    index: number,
-    mainChain?: boolean,
-    spentTransactionId?: null | string,
-    value: number,
+  }>,
+  transactionId: string,
+  value: number,
+  ...,
+}
+
+export type TransactionDataInputBox = {
+  // these will be ordered by the input transaction id asc
+  id: string,
+  value: number,
+  transactionId: string,
+  outputIndex: number,
+  outputTransactionId: string,
+  address: string,
+  ...,
+}
+
+export type TransactionOutputBox = {
+  // these will be ordered by the output transaction id asc
+  additionalRegisters: $ReadOnly<{ ... }>,
+  address: string,
+  assets: $ReadOnlyArray<$ReadOnly<{
+    +amount: number,
+    +tokenId: string,
     ...
   }>>,
-}>;
+  creationHeight: number,
+  ergoTree: string,
+  id: string,
+  txId: string,
+  index: number,
+  mainChain?: boolean,
+  spentTransactionId?: null | string,
+  value: number,
+  ...
+}
+
+export type BoxesForTransactionsInput = {|
+  txHashes: Array<string>,
+|};
+
+export type BoxesForTransactionsOutput = { [key: string]: {
+  inputs: $ReadOnlyArray<$ReadOnly<TransactionInputBox>>,
+  dataInputs: $ReadOnlyArray<$ReadOnly<TransactionDataInputBox>>,
+  outputs: $ReadOnlyArray<$ReadOnly<TransactionOutputBox>>,
+  } 
+}
 
 export type StatusOutput = {|
   isServerOk: boolean
